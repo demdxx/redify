@@ -1,4 +1,5 @@
 //go:build mssql
+// +build mssql
 
 package connect
 

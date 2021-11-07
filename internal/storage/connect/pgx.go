@@ -1,4 +1,5 @@
 //go:build pgx
+// +build pgx
 
 package connect
 

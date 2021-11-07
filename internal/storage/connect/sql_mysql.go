@@ -1,4 +1,5 @@
 //go:build mysql
+// +build mysql
 
 package connect
 

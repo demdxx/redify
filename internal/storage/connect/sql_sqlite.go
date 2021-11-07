@@ -1,4 +1,5 @@
 //go:build sqlite || sqlite3
+// +build sqlite sqlite3
 
 package connect
 
