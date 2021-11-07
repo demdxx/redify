@@ -96,7 +96,7 @@ func (srv *HTTPServer) del(c *fiber.Ctx) error {
 }
 
 func sendNotFound(c *fiber.Ctx) error {
-	c.SendStatus(fiber.StatusNotFound)
+	_ = c.SendStatus(fiber.StatusNotFound)
 	c.Response().Header.Add("content-type", "application/json")
 	return c.SendString(`{"status":"error","error":"not found"}`)
 }
@@ -119,7 +119,7 @@ func sendJSONObject(c *fiber.Ctx, obj interface{}) error {
 }
 
 func sendJSON(c *fiber.Ctx, data []byte) error {
-	c.SendStatus(fiber.StatusOK)
+	_ = c.SendStatus(fiber.StatusOK)
 	c.Response().Header.Add("content-type", "application/json")
 	var buf bytes.Buffer
 	_, _ = buf.Write([]byte(`{"status":"OK", "result":`))

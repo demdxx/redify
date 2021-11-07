@@ -34,7 +34,6 @@ func Open(ctx context.Context, connURL string) (storage.Driver, error) {
 		return nil
 	}
 	pool, err := pgxpool.ConnectConfig(ctx, conf)
-	pgxpool.ConnectConfig(ctx, conf)
 	if err != nil {
 		return nil, err
 	}
