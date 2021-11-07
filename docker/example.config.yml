@@ -1,0 +1,30 @@
+cache:
+  connect: "memory"
+  size: 1000 # Max capacity
+  ttl: 60 # Seconds
+sources:
+  - connect: "pgx://dbuser:password@pgdb:5432/project?sslmode=disable"
+    notify_channel: redify_update
+    binds:
+    - dbnum: 0
+      key: "post_{{slug}}"
+      get_query: "SELECT * FROM posts WHERE slug = {{slug}} AND deleted_at IS NULL LIMIT 1"
+      list_query: "SELECT slug FROM posts WHERE deleted_at IS NULL"
+    - dbnum: 1
+      key: "user_{{username}}"
+      table_name: "users"
+      readonly: yes
+      # get_query: "SELECT *  FROM users WHERE username = {{username}} AND deleted_at IS NULL LIMIT 1"
+      # list_query: "SELECT username FROM users WHERE deleted_at IS NULL"
+    - dbnum: 2
+      key: "document_{{type}}_{{slug}}"
+      get_query: |
+        SELECT * FROM documents WHERE type={{type}} AND slug={{slug}} AND deleted_at IS NULL LIMIT 1
+      list_query: |
+        SELECT type, slug FROM documents WHERE deleted_at IS NULL
+      upsert_query: |
+        INSERT INTO documents (slug, type, title, content)
+          VALUES ({{slug}},{{type}},{{title}},{{content}})
+          ON CONFLICT (slug, type) DO UPDATE SET title={{title}}, content={{content}}, deleted_at=NULL
+      del_query: |
+        UPDATE documents SET deleted_at=NOW() WHERE type={{type}} AND slug={{slug}}

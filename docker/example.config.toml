@@ -1,0 +1,24 @@
+[cache]
+  connect = "memory"
+  size = 1000 # Max capacity
+  ttl = 60 # Seconds
+[[sources]]
+  connect = "postgres://hostname:port/db"
+  [[binds]]
+    dbnum = 0
+    key = "post_{{slug}}"
+    get_query = "SELECT * FROM posts WHERE slug = {{slug}} AND deleted_at IS NULL LIMIT 1"
+    list_query = "SELECT slug FROM posts WHERE deleted_at IS NULL"
+  [[binds]]
+    dbnum = 1
+    key = "user_{{username}}"
+    readonly = true
+    get_query = "SELECT * FROM users WHERE username = {{username}} AND deleted_at IS NULL LIMIT 1"
+    list_query = "SELECT username FROM users WHERE deleted_at IS NULL"
+  [[binds]]
+    dbnum = 2
+    key = "document_{{type}}_{{slug}}"
+    get_query = "SELECT * FROM documents WHERE type={{type}} AND slug={{slug}} AND deleted_at IS NULL LIMIT 1"
+    list_query = "SELECT type, slug FROM documents WHERE deleted_at IS NULL"
+# [[sources]]
+#   connect = "mysql://hostname:port/db"
