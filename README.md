@@ -81,6 +81,17 @@ AFTER INSERT OR UPDATE OR DELETE ON products
     FOR EACH ROW EXECUTE PROCEDURE notify_event();
 ```
 
+## Support Redis commands
+
+* SELECT \[dbnum\]
+* KEYS \[pattern\]
+* GET key
+* MGET key1 key2 ... keyN
+* SET key value
+* MSET key1 value1 key2 value2 ... keyN valueN
+* PING
+* QUIT
+
 ## TODO
 
 * [x] PGX PostgreSQL driver support

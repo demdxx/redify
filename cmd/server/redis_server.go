@@ -100,8 +100,12 @@ func (srv *RedisServer) command(conn redcon.Conn, cmd redcon.Command) {
 		conn.Close()
 	case "set":
 		srv.cmdSet(ctx, conn, dbnum, cmd)
+	case "mset":
+		srv.cmdMSet(ctx, conn, dbnum, cmd)
 	case "get":
 		srv.cmdGet(ctx, conn, dbnum, cmd)
+	case "mget":
+		srv.cmdMGet(ctx, conn, dbnum, cmd)
 	case "del":
 		srv.cmdDel(ctx, conn, dbnum, cmd)
 	case "keys":
@@ -153,6 +157,28 @@ func (srv *RedisServer) cmdGet(ctx context.Context, conn redcon.Conn, dbnum int,
 	}
 }
 
+func (srv *RedisServer) cmdMGet(ctx context.Context, conn redcon.Conn, dbnum int, cmd redcon.Command) {
+	if len(cmd.Args) < 2 {
+		srv.wrongNumberArgsError(conn, cmd)
+		return
+	}
+	conn.WriteArray(len(cmd.Args) - 1)
+	for i := 1; i < len(cmd.Args); i++ {
+		var (
+			key        = string(cmd.Args[1])
+			value, err = srv.Driver.Get(ctx, dbnum, key)
+		)
+		if err != nil && !errors.Is(err, storage.ErrNotFound) {
+			ctxlogger.Get(ctx).Error("mget value", zap.Error(err), zap.String("key", key))
+		}
+		if value == nil {
+			conn.WriteNull()
+		} else {
+			conn.WriteBulk(value)
+		}
+	}
+}
+
 func (srv *RedisServer) cmdSet(ctx context.Context, conn redcon.Conn, dbnum int, cmd redcon.Command) {
 	if len(cmd.Args) != 3 {
 		srv.wrongNumberArgsError(conn, cmd)
@@ -166,6 +192,25 @@ func (srv *RedisServer) cmdSet(ctx context.Context, conn redcon.Conn, dbnum int,
 	if err != nil {
 		conn.WriteError("ERR " + err.Error())
 		return
+	}
+	conn.WriteString("OK")
+}
+
+func (srv *RedisServer) cmdMSet(ctx context.Context, conn redcon.Conn, dbnum int, cmd redcon.Command) {
+	if (len(cmd.Args)-1)%2 != 0 || len(cmd.Args) < 3 {
+		srv.wrongNumberArgsError(conn, cmd)
+		return
+	}
+	for i := 0; i < len(cmd.Args); i += 2 {
+		var (
+			key   = string(cmd.Args[i])
+			value = cmd.Args[i+1]
+			err   = srv.Driver.Set(ctx, dbnum, key, value)
+		)
+		if err != nil {
+			conn.WriteError("ERR " + err.Error())
+			return
+		}
 	}
 	conn.WriteString("OK")
 }
