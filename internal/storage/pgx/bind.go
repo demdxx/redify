@@ -17,7 +17,6 @@ type (
 	DataFields = sql.DataFields
 	WhereStmt  = sql.WhereStmt
 	Syntax     = sql.Syntax
-	query      = sql.Query
 )
 
 type pgpoolIface interface {
