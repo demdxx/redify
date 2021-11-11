@@ -1,31 +1,32 @@
-package pgx
+package sql
 
 import (
 	"context"
 	"testing"
 	"time"
 
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/demdxx/gocast"
 	"github.com/demdxx/redify/internal/keypattern"
 	"github.com/demdxx/redify/internal/storage"
-	"github.com/demdxx/redify/internal/storage/sql"
-	"github.com/driftprogramming/pgxpoolmock"
-	"github.com/golang/mock/gomock"
-	"github.com/jackc/pgconn"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBind1(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	sqlxdb := sqlx.NewDb(db, "test")
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
 	var (
-		mockPool = pgxpoolmock.NewMockPgxPool(ctrl)
-		bind     = NewBind(
-			mockPool,
-			0,
-			sql.NewAbstractSyntax(`"`),
+		bind = NewBind(
+			sqlxdb, 0,
+			NewAbstractSyntax(`"`),
 			"users_{{username}}",
 			"SELECT * FROM users WHERE username={{username}}",
 			"SELECT username FROM users",
@@ -36,20 +37,26 @@ func TestBind1(t *testing.T) {
 			"username": "testuser",
 		}
 	)
-	testBindCommon(ctx, t, mockPool, bind, ectx)
+	testBindCommon(ctx, t, mock, bind, ectx)
+
+	mock.ExpectClose()
+	assert.NoError(t, db.Close())
 }
 
 func TestBind2(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	sqlxdb := sqlx.NewDb(db, "test")
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
 	var (
-		mockPool = pgxpoolmock.NewMockPgxPool(ctrl)
-		bind     = NewBindFromTableName(
-			mockPool, 0,
-			sql.NewAbstractSyntax(`"`),
+		bind = NewBindFromTableName(
+			sqlxdb, 0,
+			NewAbstractSyntax(`"`),
 			"users_{{username}}",
 			"users", "", false,
 		)
@@ -57,10 +64,13 @@ func TestBind2(t *testing.T) {
 			"username": "testuser",
 		}
 	)
-	testBindCommon(ctx, t, mockPool, bind, ectx)
+	testBindCommon(ctx, t, mock, bind, ectx)
+
+	mock.ExpectClose()
+	assert.NoError(t, db.Close())
 }
 
-func testBindCommon(ctx context.Context, t *testing.T, mockPool *pgxpoolmock.MockPgxPool, bind *Bind, ectx keypattern.ExecContext) {
+func testBindCommon(ctx context.Context, t *testing.T, mock sqlmock.Sqlmock, bind *Bind, ectx keypattern.ExecContext) {
 	t.Run("negative key", func(t *testing.T) {
 		if bind.MatchKey("not_users_key", ectx) {
 			t.Error("invalid negative key matching")
@@ -69,11 +79,12 @@ func testBindCommon(ctx context.Context, t *testing.T, mockPool *pgxpoolmock.Moc
 
 	t.Run("select record", func(t *testing.T) {
 		columns := []string{"id", "username"}
-		pgxRows := pgxpoolmock.NewRows(columns).
-			AddRow(1, "testuser").ToPgxRows()
-		mockPool.EXPECT().
-			Query(gomock.Any(), gomock.Any(), gomock.AssignableToTypeOf("")).
-			Return(pgxRows, nil)
+		mock.ExpectQuery("SELECT \\*").
+			WithArgs(sqlmock.AnyArg()).
+			WillReturnRows(
+				sqlmock.NewRows(columns).
+					AddRow(1, "testuser"),
+			)
 
 		if !bind.MatchKey("users_1", ectx) {
 			t.Error("invalid key matching")
@@ -81,40 +92,40 @@ func testBindCommon(ctx context.Context, t *testing.T, mockPool *pgxpoolmock.Moc
 
 		rec, err := bind.Get(ctx, ectx)
 		if assert.NoError(t, err) {
-			assert.Equal(t, 1, rec["id"])
+			assert.Equal(t, 1, gocast.ToInt(rec["id"]))
 			assert.Equal(t, "testuser", rec["username"])
 		}
 	})
 	t.Run("select list", func(t *testing.T) {
 		columns := []string{"id", "username"}
-		pgxRows := pgxpoolmock.NewRows(columns).
-			AddRow(1, "testuser1").
-			AddRow(2, "testuser2").ToPgxRows()
-		mockPool.EXPECT().
-			Query(gomock.Any(), gomock.Any()).
-			Return(pgxRows, nil)
+		mock.ExpectQuery("SELECT").
+			WillReturnRows(
+				sqlmock.NewRows(columns).
+					AddRow(1, "testuser1").
+					AddRow(2, "testuser2"),
+			)
 		if !bind.MatchPattern("users_*", ectx) {
 			t.Error("invalid key matching")
 		}
 		res, err := bind.List(ctx, ectx)
 		if assert.NoError(t, err) {
 			assert.Equal(t, 2, len(res))
-			assert.Equal(t, 1, res[0]["id"])
-			assert.Equal(t, 2, res[1]["id"])
+			assert.Equal(t, 1, gocast.ToInt(res[0]["id"]))
+			assert.Equal(t, 2, gocast.ToInt(res[1]["id"]))
 		}
 	})
 	t.Run("insert record", func(t *testing.T) {
-		mockPool.EXPECT().
-			Exec(gomock.Any(), gomock.Any(), gomock.AssignableToTypeOf("")).
-			Return(pgconn.CommandTag("INSERT"), nil)
+		mock.ExpectExec("INSERT INTO").
+			WithArgs(sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 		ectx["username"] = "testuser"
 		err := bind.Upsert(ctx, ectx, []byte(`{"newVar":"val"}`))
 		assert.NoError(t, err)
 	})
 	t.Run("delete record", func(t *testing.T) {
-		mockPool.EXPECT().
-			Exec(gomock.Any(), gomock.Any(), gomock.AssignableToTypeOf("")).
-			Return(pgconn.CommandTag("DELETE"), nil)
+		mock.ExpectExec("DELETE").
+			WithArgs(sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 		ectx["username"] = "testuser"
 		err := bind.Del(ctx, ectx)
 		assert.NoError(t, err)

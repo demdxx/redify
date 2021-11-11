@@ -15,6 +15,7 @@ import (
 	"github.com/demdxx/redify/internal/storage"
 	"github.com/demdxx/redify/internal/storage/connect"
 	"github.com/demdxx/redify/internal/storage/multistore"
+	"github.com/demdxx/redify/internal/storage/profiler"
 	"github.com/demdxx/redify/internal/storage/proxy"
 	"github.com/demdxx/redify/internal/storage/simplecache"
 	"github.com/demdxx/redify/internal/zlogger"
@@ -96,6 +97,14 @@ func main() {
 	defer func() {
 		fatalError(store.Close(), "close DB connection")
 	}()
+
+	if config.Server.Profile.Listen != "" {
+		profiler.Run(
+			config.Server.Profile.Mode,
+			config.Server.Profile.Listen,
+			zap.L(),
+			true)
+	}
 
 	if config.Server.RedisServer.Listen != "" {
 		zap.L().Info("Run Redis server", zap.String("listen", config.Server.RedisServer.Listen))

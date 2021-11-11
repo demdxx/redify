@@ -3,8 +3,6 @@ package pgx
 import (
 	"context"
 	"encoding/json"
-	"path/filepath"
-	"strings"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgconn"
@@ -15,8 +13,11 @@ import (
 )
 
 type (
-	Record = storage.Record
-	query  = sql.Query
+	Record     = storage.Record
+	DataFields = sql.DataFields
+	WhereStmt  = sql.WhereStmt
+	Syntax     = sql.Syntax
+	query      = sql.Query
 )
 
 type pgpoolIface interface {
@@ -25,86 +26,26 @@ type pgpoolIface interface {
 }
 
 type Bind struct {
-	conn        pgpoolIface
-	dbnum       int
-	pattern     *keypattern.Pattern
-	getQuery    *query
-	listQuery   *query
-	upsertQuery *query
-	delQuery    *query
+	conn pgpoolIface
+	sql.BindAbstract
 }
 
-func NewBind(conn pgpoolIface, dbnum int, pattern, getQuery, listQuery, upsertQuery, delQuery string) *Bind {
+func NewBind(conn pgpoolIface, dbnum int, syntax Syntax, pattern, getQuery, listQuery, upsertQuery, delQuery string) *Bind {
 	return &Bind{
-		conn:        conn,
-		dbnum:       dbnum,
-		pattern:     keypattern.NewPatternFromExpression(pattern),
-		getQuery:    sql.ParseQuery(getQuery),
-		listQuery:   sql.ParseQuery(listQuery),
-		upsertQuery: sql.ParseQuery(upsertQuery),
-		delQuery:    sql.ParseQuery(delQuery),
+		BindAbstract: *sql.NewBindAbstract(dbnum, syntax, pattern, getQuery, listQuery, upsertQuery, delQuery),
+		conn:         conn,
 	}
 }
 
-func NewBindFromTableName(conn pgpoolIface, dbnum int, pattern, tableName, whereExt string, readonly bool) *Bind {
-	var (
-		ptrObj             = keypattern.NewPatternFromExpression(pattern)
-		keyFields          = ptrObj.Keys()
-		whereConds         = make([]string, 0, len(keyFields))
-		insertValues       = make([]string, 0, len(keyFields))
-		setValues          = make([]string, 0, len(keyFields))
-		fields             = strings.Join(keyFields, ", ")
-		whereStatement     = ""
-		whereListStatement = ""
-		delQyeryObj        *query
-		insertQyeryObj     *query
-	)
-	if keys := ptrObj.Keys(); len(keys) > 0 {
-		whereStatement = " WHERE "
-		for _, key := range keys {
-			whereConds = append(whereConds, key+"={{"+key+"}}")
-			insertValues = append(insertValues, "{{"+key+"}}")
-		}
-		setValues = whereConds
-		whereStatement += strings.Join(whereConds, " AND ")
-	}
-	if whereExt != "" {
-		if whereStatement == "" {
-			whereStatement = " WHERE "
-		} else {
-			whereStatement += " AND "
-		}
-		whereListStatement = " WHERE " + whereExt
-		whereStatement += whereExt
-	}
-	if !readonly {
-		delQyeryObj = sql.ParseQuery("DELETE FROM " + tableName + whereStatement)
-		insertQyeryObj = sql.ParseQuery("INSERT INTO " + tableName + "(" + fields + ")" +
-			" VALUES(" + strings.Join(insertValues, ", ") + ")" +
-			" ON CONFLICT (" + fields + ") DO UPDATE SET " + strings.Join(setValues, ","))
-	}
+func NewBindFromTableName(conn pgpoolIface, dbnum int, syntax Syntax, pattern, tableName, whereExt string, readonly bool) *Bind {
 	return &Bind{
-		conn:        conn,
-		dbnum:       dbnum,
-		pattern:     ptrObj,
-		getQuery:    sql.ParseQuery("SELECT * FROM " + tableName + whereStatement + " LIMIT 1"),
-		listQuery:   sql.ParseQuery("SELECT * FROM " + tableName + whereListStatement),
-		delQuery:    delQyeryObj,
-		upsertQuery: insertQyeryObj,
+		BindAbstract: *sql.NewBindAbstractFromTableName(dbnum, syntax, pattern, tableName, whereExt, readonly),
+		conn:         conn,
 	}
 }
 
-func (b *Bind) matchKey(key string, ectx keypattern.ExecContext) bool {
-	return b.pattern.Match(key, ectx)
-}
-
-func (b *Bind) matchPattern(pt string, ectx keypattern.ExecContext) bool {
-	ok, _ := filepath.Match(pt, b.pattern.String())
-	return ok
-}
-
-func (b *Bind) get(ctx context.Context, ectx keypattern.ExecContext) (Record, error) {
-	rows, err := b.conn.Query(ctx, b.getQuery.String(), b.getQuery.Args(ectx)...)
+func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, error) {
+	rows, err := b.conn.Query(ctx, b.GetQuery.String(), b.GetQuery.Args(ectx)...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,14 +54,14 @@ func (b *Bind) get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 	return record, err
 }
 
-func (b *Bind) list(ctx context.Context, ectx keypattern.ExecContext) ([]Record, error) {
+func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record, error) {
 	res := make([]Record, 0, 10)
-	err := pgxscan.Select(ctx, b.conn, &res, b.listQuery.String(), b.listQuery.Args(ectx)...)
+	err := pgxscan.Select(ctx, b.conn, &res, b.ListQuery.String(), b.ListQuery.Args(ectx)...)
 	return res, err
 }
 
-func (b *Bind) upsert(ctx context.Context, ectx keypattern.ExecContext, value []byte) error {
-	if b.upsertQuery == nil {
+func (b *Bind) Upsert(ctx context.Context, ectx keypattern.ExecContext, value []byte) error {
+	if b.UpsertQuery == nil {
 		return storage.ErrReadOnly
 	}
 	if ectx == nil {
@@ -133,14 +74,14 @@ func (b *Bind) upsert(ctx context.Context, ectx keypattern.ExecContext, value []
 	for k, v := range values {
 		ectx[k] = v
 	}
-	_, err := b.conn.Exec(ctx, b.upsertQuery.String(), b.upsertQuery.Args(ectx)...)
+	_, err := b.conn.Exec(ctx, b.UpsertQuery.String(), b.UpsertQuery.Args(ectx)...)
 	return err
 }
 
-func (b *Bind) del(ctx context.Context, ectx keypattern.ExecContext) error {
-	if b.delQuery == nil {
+func (b *Bind) Del(ctx context.Context, ectx keypattern.ExecContext) error {
+	if b.DelQuery == nil {
 		return storage.ErrReadOnly
 	}
-	_, err := b.conn.Exec(ctx, b.delQuery.String(), b.delQuery.Args(ectx)...)
+	_, err := b.conn.Exec(ctx, b.DelQuery.String(), b.DelQuery.Args(ectx)...)
 	return err
 }

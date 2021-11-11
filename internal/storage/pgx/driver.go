@@ -13,11 +13,13 @@ import (
 	"github.com/demdxx/redify/internal/context/ctxlogger"
 	"github.com/demdxx/redify/internal/keypattern"
 	"github.com/demdxx/redify/internal/storage"
+	"github.com/demdxx/redify/internal/storage/sql"
 )
 
 type Driver struct {
-	pool  *pgxpool.Pool
-	binds []*Bind
+	pool   *pgxpool.Pool
+	binds  []*Bind
+	syntax sql.Syntax
 }
 
 func Open(ctx context.Context, connURL string) (storage.Driver, error) {
@@ -37,7 +39,7 @@ func Open(ctx context.Context, connURL string) (storage.Driver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Driver{pool: pool}, nil
+	return &Driver{pool: pool, syntax: sql.NewAbstractSyntax(`"`)}, nil
 }
 
 func (pg *Driver) Get(ctx context.Context, dbnum int, key string) ([]byte, error) {
@@ -46,7 +48,7 @@ func (pg *Driver) Get(ctx context.Context, dbnum int, key string) ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	rec, err := bind.get(ctx, ectx)
+	rec, err := bind.Get(ctx, ectx)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +61,7 @@ func (pg *Driver) Set(ctx context.Context, dbnum int, key string, value []byte) 
 	if err != nil {
 		return err
 	}
-	return bind.upsert(ctx, ectx, value)
+	return bind.Upsert(ctx, ectx, value)
 }
 
 func (pg *Driver) Del(ctx context.Context, dbnum int, key string) error {
@@ -68,7 +70,7 @@ func (pg *Driver) Del(ctx context.Context, dbnum int, key string) error {
 	if err != nil {
 		return err
 	}
-	return bind.del(ctx, ectx)
+	return bind.Del(ctx, ectx)
 }
 
 func (pg *Driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string, error) {
@@ -78,11 +80,11 @@ func (pg *Driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string
 	)
 	for _, bind := range pg.binds {
 		ectx := keypattern.ExecContext{}
-		if bind.dbnum != dbnum || !bind.matchPattern(pattern, ectx) {
+		if bind.DBNum != dbnum || !bind.MatchPattern(pattern, ectx) {
 			continue
 		}
 		hasKey = true
-		res, err := bind.list(ctx, ectx)
+		res, err := bind.List(ctx, ectx)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +92,7 @@ func (pg *Driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string
 			keys = make([]string, 0, len(res))
 		}
 		for _, r := range res {
-			keys = append(keys, bind.pattern.Format(r))
+			keys = append(keys, bind.Pattern.Format(r))
 		}
 	}
 	if !hasKey {
@@ -102,9 +104,11 @@ func (pg *Driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string
 func (pg *Driver) Bind(ctx context.Context, conf *storage.BindConfig) error {
 	var bind *Bind
 	if conf.GetQuery != "" {
-		bind = NewBind(pg.pool, conf.DBNum, conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery)
+		bind = NewBind(pg.pool, conf.DBNum, pg.syntax,
+			conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery)
 	} else if conf.TableName != "" {
-		bind = NewBindFromTableName(pg.pool, conf.DBNum, conf.Pattern, conf.TableName, conf.WhereExt, conf.Readonly)
+		bind = NewBindFromTableName(pg.pool, conf.DBNum, pg.syntax,
+			conf.Pattern, conf.TableName, conf.WhereExt, conf.Readonly)
 	} else {
 		return storage.ErrInvalidBindConfig
 	}
@@ -119,7 +123,7 @@ func (pg *Driver) Close() error {
 
 func (pg *Driver) bindByKey(key string, dbnum int, ectx keypattern.ExecContext) (*Bind, error) {
 	for _, b := range pg.binds {
-		if b.dbnum == dbnum && b.matchKey(key, ectx) {
+		if b.DBNum == dbnum && b.MatchKey(key, ectx) {
 			return b, nil
 		}
 	}
@@ -206,8 +210,8 @@ func (pg *Driver) ListenUpdateNotifies(ctx context.Context, chanelName string, n
 
 func (pg *Driver) keyFromTableAndContext(tableName string, ectx keypattern.ExecContext) (string, error) {
 	for _, b := range pg.binds {
-		if b.getQuery.TableName == tableName {
-			return b.pattern.Format(ectx), nil
+		if b.TableName() == tableName {
+			return b.Pattern.Format(ectx), nil
 		}
 	}
 	return "", storage.ErrNoKey

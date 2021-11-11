@@ -29,7 +29,7 @@ func New(ctx context.Context, cache storage.Cacher, store storage.Driver, notify
 		cache: cache,
 		store: store,
 	}
-	if notifier := store.(notifyListener); notifier != nil && notifyChannelName != "" {
+	if notifier, _ := store.(notifyListener); notifier != nil && notifyChannelName != "" {
 		go func() {
 			ctxlogger.Get(ctx).Info("run notify listener")
 			if err := notifier.ListenUpdateNotifies(ctx, notifyChannelName, prx.notifier); err != nil {
