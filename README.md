@@ -95,9 +95,9 @@ AFTER INSERT OR UPDATE OR DELETE ON products
 ## TODO
 
 * [x] PGX PostgreSQL driver support
-* [ ] MySQL driver support
-* [ ] Sqlite driver support
-* [ ] MSSQL driver support
+* [X] MySQL driver support
+* [X] Sqlite driver support
+* [X] MSSQL driver support
 * [ ] Oracle driver support
 * [ ] Cassandra driver support
 * [ ] MongoDB driver support
