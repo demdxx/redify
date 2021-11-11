@@ -98,7 +98,7 @@ AFTER INSERT OR UPDATE OR DELETE ON products
 * [X] MySQL driver support
 * [X] Sqlite driver support
 * [X] MSSQL driver support
-* [ ] Oracle driver support
+* [X] Oracle driver support
 * [ ] Cassandra driver support
 * [ ] MongoDB driver support
 * [ ] NextJS application example

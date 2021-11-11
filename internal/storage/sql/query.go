@@ -21,6 +21,9 @@ type Query struct {
 }
 
 func ParseQuery(q string) *Query {
+	if q == "" {
+		return nil
+	}
 	var (
 		vars      = keypattern.ExtractVars(q)
 		args      = make([]string, 0, len(vars))
