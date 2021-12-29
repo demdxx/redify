@@ -24,7 +24,59 @@ application controllers and custom caches.
 APP_BUILD_TAGS=pgx,mysql,mssql make build
 ```
 
+```sh
+redify --conf docker/example.config.yml
+```
+
+## Config example
+
+```yml
+cache:
+  connect: "memory"
+  size: 1000 # Max capacity
+  ttl: 60 # Seconds
+sources:
+  - connect: "postgres://dbuser:password@pgdb:5432/project?sslmode=disable"
+    # Predefined in the postgresql notification channel
+    notify_channel: redify_update
+    binds:
+    - dbnum: 0
+      key: "post_{{slug}}"
+      get_query: "SELECT * FROM posts WHERE slug = {{slug}} AND deleted_at IS NULL LIMIT 1"
+      list_query: "SELECT slug FROM posts WHERE deleted_at IS NULL"
+    - dbnum: 1
+      # Automaticaly prepare requests for table `users` with key field `username`
+      key: "user_{{username}}"
+      table_name: "users"
+      readonly: yes
+    - dbnum: 2
+      key: "document_{{type}}_{{slug}}"
+      get_query: |
+        SELECT * FROM documents WHERE type={{type}} AND slug={{slug}} AND deleted_at IS NULL LIMIT 1
+      list_query: |
+        SELECT type, slug FROM documents WHERE deleted_at IS NULL
+      upsert_query: |
+        INSERT INTO documents (slug, type, title, content)
+          VALUES ({{slug}},{{type}},{{title}},{{content}})
+          ON CONFLICT (slug, type) DO UPDATE SET title={{title}}, content={{content}}, deleted_at=NULL
+      del_query: |
+        UPDATE documents SET deleted_at=NOW() WHERE type={{type}} AND slug={{slug}}
+  - connect: "mysql://dbuser:password@mysql:3306/project"
+    binds:
+    - dbnum: 0
+      key: "wp_post_{{slug}}"
+      get_query: "SELECT * FROM wp_posts WHERE slug = {{slug}} AND deleted_at IS NULL LIMIT 1"
+      list_query: "SELECT slug FROM wp_posts WHERE deleted_at IS NULL"
+```
+
 ## Redis using example
+
+For using of Redis protocol.
+
+```sh
+export SERVER_HTTP_LISTEN=:8080
+export SERVER_HTTP_READ_TIMEOUT=120s
+```
 
 ```sh
 > redis-cli -p 8081 -h hostname
@@ -35,6 +87,44 @@ hostname:8081> keys *o*
 4) "document_pdf_help"
 hostname:8081> get post_bye
 "{\"content\":\"Bye everyone\",\"created_at\":\"2021-11-06T20:03:56.218629Z\",\"deleted_at\":null,\"id\":4,\"slug\":\"bye\",\"title\":\"Bye world\",\"updated_at\":\"2021-11-06T20:03:56.218629Z\"}"
+```
+
+## HTTP example
+
+For using of HTTP protocol.
+
+```sh
+export SERVER_HTTP_LISTEN=:8080
+export SERVER_HTTP_READ_TIMEOUT=120s
+```
+
+> GET /:dbnum/:key
+
+```sh
+curl -XGET "http://localhost:8080/0/post_hello"
+{"status":"OK", "result":{"content":"Hello everyone","created_at":"2021-11-06T20:03:56.218629Z","deleted_at":null,"id":3,"slug":"hello","title":"Hello world","updated_at":"2021-11-06T20:03:56.218629Z"}}
+```
+
+> PUT /:dbnum/:key
+> POST /:dbnum/:key
+
+```sh
+curl -d "@data.json" -XPOST "http://localhost:8080/0/list/post_hello"
+{"status":"OK"}
+```
+
+> GET /:dbnum/list/:pattern
+
+```sh
+curl -XGET "http://localhost:8080/0/list/post_*"
+{"status":"OK", "result":["post_post-1","post_post-2","post_hello","post_bye"]}
+```
+
+> DELETE /:dbnum/:key
+
+```sh
+curl -XDELETE "http://localhost:8080/0/post_hello"
+{"status":"OK"}
 ```
 
 ## Cache invalidation notifications
@@ -99,6 +189,7 @@ AFTER INSERT OR UPDATE OR DELETE ON products
 * [X] Sqlite driver support
 * [X] MSSQL driver support
 * [X] Oracle driver support
+* [ ] Add personal cache to every bind separately
 * [ ] Cassandra driver support
 * [ ] MongoDB driver support
 * [ ] NextJS application example
