@@ -53,7 +53,7 @@ func (d *simpleCache) Set(ctx context.Context, key string, value []byte) error {
 }
 
 func (d *simpleCache) Del(ctx context.Context, key string) error {
-	if err := d.cache.Remove(key); err != nil {
+	if err := d.cache.Remove(d.prefix + key); err != nil {
 		if err == ttlcache.ErrNotFound {
 			return storage.ErrNotFound
 		}

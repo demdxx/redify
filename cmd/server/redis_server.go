@@ -1,7 +1,9 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"strconv"
@@ -106,6 +108,10 @@ func (srv *RedisServer) command(conn redcon.Conn, cmd redcon.Command) {
 		srv.cmdGet(ctx, conn, dbnum, cmd)
 	case "mget":
 		srv.cmdMGet(ctx, conn, dbnum, cmd)
+	case "hget":
+		srv.cmdHGet(ctx, conn, dbnum, cmd)
+	case "hgetall":
+		srv.cmdHGetall(ctx, conn, dbnum, cmd)
 	case "del":
 		srv.cmdDel(ctx, conn, dbnum, cmd)
 	case "keys":
@@ -165,7 +171,7 @@ func (srv *RedisServer) cmdMGet(ctx context.Context, conn redcon.Conn, dbnum int
 	conn.WriteArray(len(cmd.Args) - 1)
 	for i := 1; i < len(cmd.Args); i++ {
 		var (
-			key        = string(cmd.Args[1])
+			key        = string(cmd.Args[i])
 			value, err = srv.Driver.Get(ctx, dbnum, key)
 		)
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {
@@ -176,6 +182,82 @@ func (srv *RedisServer) cmdMGet(ctx context.Context, conn redcon.Conn, dbnum int
 		} else {
 			conn.WriteBulk(value)
 		}
+	}
+}
+
+func (srv *RedisServer) cmdHGet(ctx context.Context, conn redcon.Conn, dbnum int, cmd redcon.Command) {
+	if len(cmd.Args) != 3 {
+		srv.wrongNumberArgsError(conn, cmd)
+		return
+	}
+	var (
+		key        = string(cmd.Args[1])
+		name       = string(cmd.Args[2])
+		value, err = srv.Driver.Get(ctx, dbnum, key)
+	)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		ctxlogger.Get(ctx).Error("mget value", zap.Error(err), zap.String("key", key))
+	}
+	if value == nil {
+		conn.WriteNull()
+	} else if bytes.HasPrefix(value, []byte("{")) {
+		var record map[string]json.RawMessage
+		if err := json.Unmarshal(value, &record); err == nil {
+			if val := record[name]; bytes.HasPrefix(val, []byte(`"`)) {
+				var s string
+				if err := json.Unmarshal(val, &s); err != nil {
+					conn.WriteError("ERR decode field '" + key + "' " + err.Error())
+				} else {
+					conn.WriteBulkString(s)
+				}
+			} else {
+				conn.WriteBulk(val)
+			}
+		} else {
+			conn.WriteNull()
+		}
+	} else {
+		conn.WriteNull()
+	}
+}
+
+func (srv *RedisServer) cmdHGetall(ctx context.Context, conn redcon.Conn, dbnum int, cmd redcon.Command) {
+	if len(cmd.Args) != 2 {
+		srv.wrongNumberArgsError(conn, cmd)
+		return
+	}
+	var (
+		key        = string(cmd.Args[1])
+		value, err = srv.Driver.Get(ctx, dbnum, key)
+	)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		ctxlogger.Get(ctx).Error("mget value", zap.Error(err), zap.String("key", key))
+	}
+	if value == nil {
+		conn.WriteNull()
+	} else if bytes.HasPrefix(value, []byte("{")) {
+		var record map[string]json.RawMessage
+		if err := json.Unmarshal(value, &record); err == nil {
+			conn.WriteArray(len(record) * 2)
+			for key, val := range record {
+				conn.WriteBulkString(key)
+				if bytes.HasPrefix(val, []byte(`"`)) {
+					var s string
+					if err := json.Unmarshal(val, &s); err != nil {
+						conn.WriteError("ERR decode field '" + key + "' " + err.Error())
+					} else {
+						conn.WriteBulkString(s)
+					}
+				} else {
+					conn.WriteBulk(val)
+				}
+			}
+		} else {
+			conn.WriteArray(1)
+			conn.WriteBulk(value)
+		}
+	} else {
+		conn.WriteBulk(value)
 	}
 }
 

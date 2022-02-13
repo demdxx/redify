@@ -21,7 +21,7 @@ application controllers and custom caches.
 ## Build project
 
 ```sh
-APP_BUILD_TAGS=pgx,mysql,mssql make build
+APP_BUILD_TAGS=pgx,mysql,mssql,kafka,redispub,nats make build
 ```
 
 ```sh
@@ -67,6 +67,10 @@ sources:
       key: "wp_post_{{slug}}"
       get_query: "SELECT * FROM wp_posts WHERE slug = {{slug}} AND deleted_at IS NULL LIMIT 1"
       list_query: "SELECT slug FROM wp_posts WHERE deleted_at IS NULL"
+  - connect: nats://nats:4442/group?topics=news
+    binds:
+    - dbnum: 0
+      key: news_notify
 ```
 
 ## Redis using example
@@ -74,8 +78,8 @@ sources:
 For using of Redis protocol.
 
 ```sh
-export SERVER_HTTP_LISTEN=:8080
-export SERVER_HTTP_READ_TIMEOUT=120s
+export SERVER_REDIS_LISTEN=:8080
+export SERVER_REDIS_READ_TIMEOUT=120s
 ```
 
 ```sh
@@ -87,6 +91,23 @@ hostname:8081> keys *o*
 4) "document_pdf_help"
 hostname:8081> get post_bye
 "{\"content\":\"Bye everyone\",\"created_at\":\"2021-11-06T20:03:56.218629Z\",\"deleted_at\":null,\"id\":4,\"slug\":\"bye\",\"title\":\"Bye world\",\"updated_at\":\"2021-11-06T20:03:56.218629Z\"}"
+hostname:8081> hgetall post_hello
+ 1) "content"
+ 2) "Hello everyone"
+ 3) "created_at"
+ 4) "2021-11-06T20:03:56.218629Z"
+ 5) "deleted_at"
+ 6) "null"
+ 7) "id"
+ 8) "3"
+ 9) "slug"
+10) "hello"
+11) "title"
+12) "Hello world"
+13) "updated_at"
+14) "2021-11-06T20:03:56.218629Z"
+hostname:8081> hget post_hello title
+"Hello world"
 ```
 
 ## HTTP example
@@ -171,12 +192,41 @@ AFTER INSERT OR UPDATE OR DELETE ON products
     FOR EACH ROW EXECUTE PROCEDURE notify_event();
 ```
 
+## Event streaming
+
+In some cases, it will be convenient to use storage keys as a mechanism
+for publishing events to message publishing systems (queues).
+It can be used to publish intrasystem events or form pending actions.
+
+### Build
+```ss
+APP_BUILD_TAGS=kafka,redispub,nats make build
+```
+
+### Config
+```yaml
+sources:
+  # (kafka|nats|redispub)://hostname:port/group_name?topics=name_in_stream
+  - connect: nats://nats:4442/group?topics=news
+    binds:
+    - dbnum: 0
+      key: news_notify
+```
+
+### Using
+```sh
+hostname:8081> set news_notify '{"action":"view","id":100,"ts":199991229912}'
+OK
+```
+
 ## Support Redis commands
 
 * SELECT \[dbnum\]
 * KEYS \[pattern\]
 * GET key
 * MGET key1 key2 ... keyN
+* HGET key fieldname
+* HGETALL key
 * SET key value
 * MSET key1 value1 key2 value2 ... keyN valueN
 * PING
@@ -184,11 +234,12 @@ AFTER INSERT OR UPDATE OR DELETE ON products
 
 ## TODO
 
-* [x] PGX PostgreSQL driver support
+* [X] PGX PostgreSQL driver support
 * [X] MySQL driver support
 * [X] Sqlite driver support
 * [X] MSSQL driver support
 * [X] Oracle driver support
+* [X] Stream Publishing driver (Kafka,NATS,Redis Pub)
 * [ ] Add personal cache to every bind separately
 * [ ] Cassandra driver support
 * [ ] MongoDB driver support

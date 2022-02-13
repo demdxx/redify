@@ -72,7 +72,11 @@ func main() {
 	for _, sconf := range config.Sources {
 		st, err := connect.Connect(ctx, sconf.Connect)
 		fatalError(err, sconf.Connect)
-		stores = append(stores, proxy.New(ctx, cache, st, sconf.NotifyChannel))
+		if cacheSupport, ok := st.(storage.CacheSupporter); ok && !cacheSupport.SupportCache() {
+			stores = append(stores, st)
+		} else {
+			stores = append(stores, proxy.New(ctx, cache, st, sconf.NotifyChannel))
+		}
 		for _, bind := range sconf.Binds {
 			err = st.Bind(ctx, &storage.BindConfig{
 				Pattern:     bind.Key,

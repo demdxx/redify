@@ -45,10 +45,16 @@ type Driver interface {
 	Bind(ctx context.Context, conf *BindConfig) error
 }
 
+// Cacher manage interface
 type Cacher interface {
 	io.Closer
 	WithPrefix(prefix string) Cacher
 	Get(ctx context.Context, key string) ([]byte, error)
 	Set(ctx context.Context, key string, value []byte) error
 	Del(ctx context.Context, key string) error
+}
+
+// CacheSupporter extension
+type CacheSupporter interface {
+	SupportCache() bool
 }

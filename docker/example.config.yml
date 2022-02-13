@@ -28,3 +28,7 @@ sources:
           ON CONFLICT (slug, type) DO UPDATE SET title={{title}}, content={{content}}, deleted_at=NULL
       del_query: |
         UPDATE documents SET deleted_at=NOW() WHERE type={{type}} AND slug={{slug}}
+  - connect: redispub://redis:6379/0?topics=news
+    binds:
+    - dbnum: 0
+      key: news_notify
