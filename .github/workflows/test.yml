@@ -14,7 +14,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.17.x
+        go-version: 1.19.x
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Run linters
@@ -26,7 +26,7 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        go-version: [1.17.x]
+        go-version: [1.19.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -46,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: [1.17.x]
+        go-version: [1.19.x]
     steps:
       - uses: actions/setup-go@v1
         with:
