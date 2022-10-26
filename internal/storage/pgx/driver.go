@@ -133,39 +133,40 @@ func (pg *Driver) bindByKey(key string, dbnum int, ectx keypattern.ExecContext) 
 // SQL Example:
 // CREATE OR REPLACE FUNCTION notify_event() RETURNS TRIGGER AS $$
 //
-//     DECLARE
-//         data json;
-//         notification json;
+//	DECLARE
+//	    data json;
+//	    notification json;
 //
-//     BEGIN
+//	BEGIN
 //
-//         -- Convert the old or new row to JSON, based on the kind of action.
-//         -- Action = DELETE?             -> OLD row
-//         -- Action = INSERT or UPDATE?   -> NEW row
-//         IF (TG_OP = 'DELETE') THEN
-//             data = row_to_json(OLD);
-//         ELSE
-//             data = row_to_json(NEW);
-//         END IF;
+//	    -- Convert the old or new row to JSON, based on the kind of action.
+//	    -- Action = DELETE?             -> OLD row
+//	    -- Action = INSERT or UPDATE?   -> NEW row
+//	    IF (TG_OP = 'DELETE') THEN
+//	        data = row_to_json(OLD);
+//	    ELSE
+//	        data = row_to_json(NEW);
+//	    END IF;
 //
-//         -- Contruct the notification as a JSON string.
-//         notification = json_build_object(
-//                           'table',TG_TABLE_NAME,
-//                           'action', TG_OP,
-//                           'data', data);
+//	    -- Contruct the notification as a JSON string.
+//	    notification = json_build_object(
+//	                      'table',TG_TABLE_NAME,
+//	                      'action', TG_OP,
+//	                      'data', data);
 //
-//         -- Execute pg_notify(channel, notification)
-//         PERFORM pg_notify('redify_update', notification::text);
+//	    -- Execute pg_notify(channel, notification)
+//	    PERFORM pg_notify('redify_update', notification::text);
 //
-//         -- Result is ignored since this is an AFTER trigger
-//         RETURN NULL;
-//     END;
+//	    -- Result is ignored since this is an AFTER trigger
+//	    RETURN NULL;
+//	END;
 //
 // $$ LANGUAGE plpgsql;
 //
 // CREATE TRIGGER products_notify_event
 // AFTER INSERT OR UPDATE OR DELETE ON products
-//     FOR EACH ROW EXECUTE PROCEDURE notify_event();
+//
+//	FOR EACH ROW EXECUTE PROCEDURE notify_event();
 func (pg *Driver) ListenUpdateNotifies(ctx context.Context, chanelName string, notifyFnk func(ctx context.Context, key string)) error {
 	conn, err := pg.pool.Acquire(ctx)
 	if err != nil {

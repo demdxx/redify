@@ -2,66 +2,77 @@ package simplecache
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/ReneKroon/ttlcache/v2"
+	"github.com/jellydator/ttlcache/v3"
 
 	"github.com/demdxx/redify/internal/storage"
 )
 
+var errSaveItem = errors.New(`undefined error of item savings`)
+
 type simpleCache struct {
 	prefix string
-	cache  *ttlcache.Cache
+	ttl    int
+	size   int
+	cache  *ttlcache.Cache[string, []byte]
+}
+
+// NewCache simple driver cache implementation
+func NewCache(size, ttl int, prefix string) (storage.Cacher, error) {
+	if ttl <= 0 {
+		ttl = 60
+	}
+	cache := ttlcache.New(
+		ttlcache.WithTTL[string, []byte](time.Duration(ttl)*time.Second),
+		ttlcache.WithCapacity[string, []byte](uint64(size)),
+	)
+	// Run automatic cleanup
+	go cache.Start()
+	return &simpleCache{
+		prefix: prefix,
+		cache:  cache,
+		ttl:    ttl,
+		size:   size,
+	}, nil
 }
 
 // New simple driver cache implementation
 func New(size, ttl int) (storage.Cacher, error) {
-	cache := ttlcache.NewCache()
-	if ttl <= 0 {
-		ttl = 60
-	}
-	err := cache.SetTTL(time.Duration(ttl) * time.Second)
-	if err != nil {
-		return nil, err
-	}
-	cache.SetCacheSizeLimit(size)
-	return &simpleCache{
-		cache: cache,
-	}, nil
+	return NewCache(size, ttl, "")
 }
 
 func (d *simpleCache) WithPrefix(prefix string) storage.Cacher {
-	return &simpleCache{
-		prefix: prefix,
-		cache:  d.cache,
+	cache, err := NewCache(d.size, d.ttl, prefix)
+	if err != nil {
+		panic(err)
 	}
+	return cache
 }
 
 func (d *simpleCache) Get(ctx context.Context, key string) ([]byte, error) {
-	val, err := d.cache.Get(d.prefix + key)
-	if err != nil {
-		if err == ttlcache.ErrNotFound {
-			return nil, storage.ErrNotFound
-		}
-		return nil, err
+	val := d.cache.Get(d.prefix + key)
+	if val == nil {
+		return nil, storage.ErrNotFound
 	}
-	return val.([]byte), nil
+	return val.Value(), nil
 }
 
 func (d *simpleCache) Set(ctx context.Context, key string, value []byte) error {
-	return d.cache.Set(d.prefix+key, value)
-}
-
-func (d *simpleCache) Del(ctx context.Context, key string) error {
-	if err := d.cache.Remove(d.prefix + key); err != nil {
-		if err == ttlcache.ErrNotFound {
-			return storage.ErrNotFound
-		}
-		return err
+	if it := d.cache.Set(d.prefix+key, value, ttlcache.DefaultTTL); it == nil {
+		return errSaveItem
 	}
 	return nil
 }
 
+func (d *simpleCache) Del(ctx context.Context, key string) error {
+	d.cache.Delete(d.prefix + key)
+	return nil
+}
+
 func (d *simpleCache) Close() error {
-	return d.cache.Purge()
+	d.cache.Stop()
+	d.cache.DeleteAll()
+	return nil
 }

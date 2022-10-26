@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	nc "github.com/geniusrabbit/notificationcenter"
+	nc "github.com/geniusrabbit/notificationcenter/v2"
 	"github.com/pkg/errors"
 )
 

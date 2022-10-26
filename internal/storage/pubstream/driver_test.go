@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/demdxx/redify/internal/storage"
-	"github.com/geniusrabbit/notificationcenter/dummy"
+	"github.com/geniusrabbit/notificationcenter/v2/dummy"
 	"github.com/stretchr/testify/assert"
 )
 

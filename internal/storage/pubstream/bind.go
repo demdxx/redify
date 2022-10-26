@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync/atomic"
 
-	nc "github.com/geniusrabbit/notificationcenter"
+	nc "github.com/geniusrabbit/notificationcenter/v2"
 )
 
 type bind struct {

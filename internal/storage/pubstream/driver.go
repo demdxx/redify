@@ -7,7 +7,7 @@ import (
 
 	"github.com/demdxx/gocast"
 	"github.com/demdxx/redify/internal/storage"
-	nc "github.com/geniusrabbit/notificationcenter"
+	nc "github.com/geniusrabbit/notificationcenter/v2"
 )
 
 // Driver of the abstract stream publisher
@@ -41,7 +41,11 @@ func (dr *driver) Set(ctx context.Context, dbnum int, key string, value []byte) 
 }
 
 func (dr *driver) Del(ctx context.Context, dbnum int, key string) error {
-	return storage.ErrMethodIsNotSupported
+	_, err := dr.bindByKey(key, dbnum)
+	if err == nil {
+		return storage.ErrMethodIsNotSupported
+	}
+	return nil
 }
 
 func (dr *driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string, error) {
