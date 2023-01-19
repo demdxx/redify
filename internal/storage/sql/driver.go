@@ -33,6 +33,8 @@ func Open(ctx context.Context, driver, connURL string) (storage.Driver, error) {
 	case "mssql", "sqlserver":
 		// TODO: Upsert query
 		syntax = NewAbstractSyntax(`"`)
+	case "clickhouse":
+		syntax = NewAbstractSyntax("`")
 	default:
 		syntax = NewAbstractSyntax(`"`)
 	}

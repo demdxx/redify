@@ -1,5 +1,7 @@
 FROM alpine:latest
 
+ARG TARGETPLATFORM
+
 EXPOSE 8080 6380 6060
 
 LABEL maintainer="Dmitry Ponomarev <demdxx@gmail.com>"
@@ -11,6 +13,6 @@ ENV SERVER_PROFILE_MODE=net
 ENV SERVER_PROFILE_LISTEN=6060
 
 COPY docker/example.config.yml /example.config.yml
-COPY .build/redify /redify
+COPY .build/${TARGETPLATFORM}/redify /redify
 
 ENTRYPOINT [ "/redify", "--conf", "/example.config.yml" ]

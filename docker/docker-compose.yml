@@ -4,6 +4,9 @@ services:
   redis:
     image: redis:latest
 
+  clickhouse:
+    image: yandex/clickhouse-server:latest
+
   pgdb:
     restart: always
     image: postgres:13
@@ -20,6 +23,7 @@ services:
     depends_on:
       - pgdb
       - redis
+      # - clickhouse
     ports:
       - "8080:8080"
       - "8081:6380"

@@ -1,9 +1,13 @@
 on:
   push:
+    tags:
+      - v*
     branches:
+      - master
       - main
   pull_request:
     branches:
+      - master
       - main
 
 name: run tests
@@ -40,7 +44,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     - name: Run tests
-      run: go test -v -covermode=count ./...
+      run: go test -v -covermode=count
 
   coverage:
     runs-on: ubuntu-latest

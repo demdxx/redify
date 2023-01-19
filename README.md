@@ -21,7 +21,7 @@ application controllers and custom caches.
 ## Build project
 
 ```sh
-APP_BUILD_TAGS=pgx,mysql,mssql,kafka,redispub,nats make build
+APP_BUILD_TAGS=pgx,clickhouse,mysql,mssql,kafka,redispub,nats make build
 ```
 
 ```sh
@@ -240,6 +240,7 @@ OK
 * [X] MSSQL driver support
 * [X] Oracle driver support
 * [X] Stream Publishing driver (Kafka,NATS,Redis Pub)
+* [X] Clickhouse driver support
 * [ ] Add personal cache to every bind separately
 * [ ] Cassandra driver support
 * [ ] MongoDB driver support

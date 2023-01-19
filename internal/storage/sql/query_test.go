@@ -15,7 +15,7 @@ func TestQuery(t *testing.T) {
 		expectQ         string
 		extpectArgs     []string
 		expectTableName string
-		expectVars      []interface{}
+		expectVars      []any
 	}{
 		{
 			q:               "SELECT * FROM data WHERE slug={{slug}}, type={{type}}",
@@ -23,7 +23,7 @@ func TestQuery(t *testing.T) {
 			expectQ:         "SELECT * FROM data WHERE slug=$1, type=$2",
 			expectTableName: "data",
 			extpectArgs:     []string{"slug", "type"},
-			expectVars:      []interface{}{"slug1", "type1"},
+			expectVars:      []any{"slug1", "type1"},
 		},
 		{
 			q:               "INSERT INTO document (slug, type) VALUES({{slug}}, {{type}})",
@@ -31,7 +31,7 @@ func TestQuery(t *testing.T) {
 			expectQ:         "INSERT INTO document (slug, type) VALUES($1, $2)",
 			expectTableName: "document",
 			extpectArgs:     []string{"slug", "type"},
-			expectVars:      []interface{}{"slug1", "type1"},
+			expectVars:      []any{"slug1", "type1"},
 		},
 		{
 			q:               "DELETE FROM store WHERE slug={{slug}}, type={{type}}",
@@ -39,7 +39,7 @@ func TestQuery(t *testing.T) {
 			expectQ:         "DELETE FROM store WHERE slug=$1, type=$2",
 			expectTableName: "store",
 			extpectArgs:     []string{"slug", "type"},
-			expectVars:      []interface{}{"slug1", "type1"},
+			expectVars:      []any{"slug1", "type1"},
 		},
 	}
 	for _, test := range tests {

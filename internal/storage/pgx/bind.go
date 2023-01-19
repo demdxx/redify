@@ -21,7 +21,7 @@ type (
 
 type pgpoolIface interface {
 	pgxscan.Querier
-	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 }
 
 type Bind struct {

@@ -53,8 +53,8 @@ func (q *Query) String() string {
 	return q.queryStr
 }
 
-func (q *Query) Args(ectx keypattern.ExecContext) []interface{} {
-	res := make([]interface{}, 0, len(q.arguments))
+func (q *Query) Args(ectx keypattern.ExecContext) []any {
+	res := make([]any, 0, len(q.arguments))
 	for _, arg := range q.arguments {
 		res = append(res, ectx[arg])
 	}

@@ -6,9 +6,9 @@ import (
 	"io"
 )
 
-type Record map[string]interface{}
+type Record map[string]any
 
-func (r Record) Get(key string) interface{} {
+func (r Record) Get(key string) any {
 	if r == nil {
 		return nil
 	}

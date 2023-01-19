@@ -5,7 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/demdxx/gocast"
+	"github.com/demdxx/gocast/v2"
 	"github.com/demdxx/redify/internal/storage"
 	nc "github.com/geniusrabbit/notificationcenter/v2"
 )
@@ -29,7 +29,7 @@ func (dr *driver) Get(ctx context.Context, dbnum int, key string) ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	return []byte(gocast.ToString(bind.CountPubs())), nil
+	return []byte(gocast.Str(bind.CountPubs())), nil
 }
 
 func (dr *driver) Set(ctx context.Context, dbnum int, key string, value []byte) error {

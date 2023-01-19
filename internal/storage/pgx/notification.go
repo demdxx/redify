@@ -3,7 +3,7 @@ package pgx
 import (
 	"encoding/json"
 
-	"github.com/demdxx/gocast"
+	"github.com/demdxx/gocast/v2"
 	"github.com/demdxx/redify/internal/keypattern"
 )
 
@@ -17,12 +17,12 @@ func (n *Notification) unmarshal(data []byte) error {
 }
 
 func (n *Notification) ectx() (e keypattern.ExecContext, err error) {
-	var m map[string]interface{}
+	var m map[string]any
 	err = json.Unmarshal(n.Data, &m)
 	if err == nil {
 		e = make(keypattern.ExecContext, len(m))
 		for k, v := range m {
-			e[k] = gocast.ToString(v)
+			e[k] = gocast.Str(v)
 		}
 	}
 	return e, err

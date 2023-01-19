@@ -28,6 +28,12 @@ sources:
           ON CONFLICT (slug, type) DO UPDATE SET title={{title}}, content={{content}}, deleted_at=NULL
       del_query: |
         UPDATE documents SET deleted_at=NOW() WHERE type={{type}} AND slug={{slug}}
+  # - connect: clickhouse://clickhouse:9000/system?dial_timeout=200ms&max_execution_time=60
+  #   binds:
+  #   - dbnum: 3
+  #     key: "settings_{{name}}"
+  #     table_name: settings
+  #     readonly: yes
   - connect: redispub://redis:6379/0?topics=news
     binds:
     - dbnum: 0

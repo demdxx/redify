@@ -110,7 +110,7 @@ func sendError(c *fiber.Ctx, err error) error {
 		strings.ReplaceAll(err.Error(), `"`, `\"`)+`"}`))
 }
 
-func sendJSONObject(c *fiber.Ctx, obj interface{}) error {
+func sendJSONObject(c *fiber.Ctx, obj any) error {
 	data, err := json.Marshal(obj)
 	if err != nil {
 		return err

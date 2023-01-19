@@ -6,7 +6,7 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/demdxx/gocast"
+	"github.com/demdxx/gocast/v2"
 	"github.com/demdxx/redify/internal/keypattern"
 	"github.com/demdxx/redify/internal/storage"
 	"github.com/jmoiron/sqlx"
@@ -92,7 +92,7 @@ func testBindCommon(ctx context.Context, t *testing.T, mock sqlmock.Sqlmock, bin
 
 		rec, err := bind.Get(ctx, ectx)
 		if assert.NoError(t, err) {
-			assert.Equal(t, 1, gocast.ToInt(rec["id"]))
+			assert.Equal(t, 1, gocast.Int(rec["id"]))
 			assert.Equal(t, "testuser", rec["username"])
 		}
 	})
@@ -110,8 +110,8 @@ func testBindCommon(ctx context.Context, t *testing.T, mock sqlmock.Sqlmock, bin
 		res, err := bind.List(ctx, ectx)
 		if assert.NoError(t, err) {
 			assert.Equal(t, 2, len(res))
-			assert.Equal(t, 1, gocast.ToInt(res[0]["id"]))
-			assert.Equal(t, 2, gocast.ToInt(res[1]["id"]))
+			assert.Equal(t, 1, gocast.Int(res[0]["id"]))
+			assert.Equal(t, 2, gocast.Int(res[1]["id"]))
 		}
 	})
 	t.Run("insert record", func(t *testing.T) {

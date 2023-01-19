@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/demdxx/gocast"
+	"github.com/demdxx/gocast/v2"
 )
 
 type ValueType int
@@ -20,12 +20,12 @@ const (
 var patternRegex = regexp.MustCompile(`\{\{([^\}]*)\}\}`)
 
 type ValueGetter interface {
-	Get(key string) interface{}
+	Get(key string) any
 }
 
 type ExecContext map[string]string
 
-func (c ExecContext) Get(key string) interface{} {
+func (c ExecContext) Get(key string) any {
 	if c == nil {
 		return nil
 	}
@@ -51,7 +51,8 @@ func NewPattern(matchers ...Matcher) *Pattern {
 // NewPatternFromExpression parse expression
 // {{varname}} - variable definition in the pattern
 // Example:
-//   posts_{{id}}
+//
+//	posts_{{id}}
 func NewPatternFromExpression(expression string) *Pattern {
 	var (
 		matchers []Matcher
@@ -100,7 +101,7 @@ func (p *Pattern) Format(vals ValueGetter) string {
 	for _, mt := range p.matchers {
 		switch m := mt.(type) {
 		case *varMatcher:
-			buf.WriteString(gocast.ToString(vals.Get(m.name)))
+			buf.WriteString(gocast.Str(vals.Get(m.name)))
 		case *constMatcher:
 			buf.WriteString(m.val)
 		default:

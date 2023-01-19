@@ -347,7 +347,7 @@ func (srv *RedisServer) context() context.Context {
 	return context.Background()
 }
 
-func getUserContext(ctx interface{}) *userContext {
+func getUserContext(ctx any) *userContext {
 	switch v := ctx.(type) {
 	case *userContext:
 		return v

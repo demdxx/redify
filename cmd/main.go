@@ -141,7 +141,7 @@ func main() {
 	wg.Wait()
 }
 
-func fatalError(err error, msgs ...interface{}) {
+func fatalError(err error, msgs ...any) {
 	if err != nil {
 		log.Fatalln(append(msgs, err)...)
 	}
