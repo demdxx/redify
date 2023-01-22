@@ -122,7 +122,8 @@ jobs:
         with:
           context: .
           file: docker/production.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm,darwin/amd64,darwin/arm64
+          # platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,darwin/amd64,darwin/arm64
+          platforms: linux/amd64,linux/arm/v7,darwin/amd64,darwin/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_NAME }}:${{ github.ref_name }},${{ env.IMAGE_NAME }}:latest
 
