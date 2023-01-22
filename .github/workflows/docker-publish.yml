@@ -94,9 +94,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # - uses: actions/download-artifact@v3
-      #   with:
-      #     name: app-build
+      - name: Get cached files
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            docker
+          key: ${{ runner.os }}-build
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
