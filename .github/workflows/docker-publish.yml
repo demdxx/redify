@@ -124,6 +124,6 @@ jobs:
           file: docker/production.Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm,darwin/amd64,darwin/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ emv.IMAGE_NAME }}:${{ github.ref_name }},${{ emv.IMAGE_NAME }}:latest
+          tags: ${{ env.IMAGE_NAME }}:${{ github.ref_name }},${{ emv.IMAGE_NAME }}:latest
 
     needs: [build-app]
