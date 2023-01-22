@@ -16,9 +16,15 @@ ifeq (${BUILD_GOARCH},arm)
 	LOCAL_TARGETPLATFORM=${BUILD_GOOS}/${BUILD_GOARCH}/v${BUILD_GOARM}
 endif
 
-COMMIT_NUMBER ?= $(shell git log -1 --pretty=format:%h)
-TAG_VALUE ?= `git describe --exact-match --tags $(git log -n1 --pretty='%h')`
+COMMIT_NUMBER ?= $(or ${COMMIT_NUMBER},)
+ifeq (${COMMIT_NUMBER},)
+	COMMIT_NUMBER ?= $(shell git log -1 --pretty=format:%h)
+endif
 
+TAG_VALUE ?= $(or ${TAG_VALUE},)
+ifeq (${TAG_VALUE},)
+	TAG_VALUE ?= `git describe --exact-match --tags $(git log -n1 --pretty='%h')`
+endif
 ifeq (${TAG_VALUE},)
 	TAG_VALUE = commit-${COMMIT_NUMBER}
 endif

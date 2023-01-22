@@ -18,19 +18,19 @@ on:
       - 'releases/**'
     tags:
       - 'v*.*.*'
-  # push:
-  #   branches:
-  #     - "master"
-  #     - "main"
-  #     - 'releases/**'
-  #   # Publish semver tags as releases.
-  #   tags:
-  #     - 'v*.*.*'
-  # pull_request:
-  #   branches:
-  #     - "master"
-  #     - "main"
-  #     - 'releases/**'
+  push:
+    branches:
+      - "master"
+      - "main"
+      - 'releases/**'
+    # Publish semver tags as releases.
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - "master"
+      - "main"
+      - 'releases/**'
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -39,7 +39,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   OS_LIST: linux darwin
   ARCH_LIST: amd64 arm64 arm
-  GNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  COMMIT_NUMBER: ${{ github.sha }}
+  TAG_VALUE: ${{ github.ref_name }}
 
 
 jobs:
@@ -67,18 +68,18 @@ jobs:
         id: build
         run: make build
 
-      # - uses: actions/upload-artifact@v3
-      #   with:
-      #     name: app-build
-      #     path: |
-      #       .build
-      #       docker
-      #     if-no-files-found: error
+      - name: Cache build files
+        uses: actions/cache@v3
+        with:
+          path: |
+            .build
+            docker
 
-  # build-docker:
-  #   runs-on: ubuntu-latest
+  build-docker:
+    runs-on: ubuntu-latest
+    environment: "docker hub"
 
-  #   steps:
+    steps:
       # Workaround: https://github.com/docker/build-push-action/issues/461
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v2
@@ -110,4 +111,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-    # needs: [build-app]
+    needs: [build-app]
