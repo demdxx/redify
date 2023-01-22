@@ -111,7 +111,9 @@ build: ## Build application
 .PHONY: build-docker-dev
 build-docker-dev: build
 	echo "Build develop docker image"
-	DOCKER_BUILDKIT=${DOCKER_BUILDKIT} docker build -t ${CONTAINER_IMAGE} -f docker/Dockerfile .
+	DOCKER_BUILDKIT=${DOCKER_BUILDKIT} docker build \
+		--build-arg TARGETPLATFORM=${LOCAL_TARGETPLATFORM} \
+		-t ${CONTAINER_IMAGE} -f docker/Dockerfile .
 
 
 .PHONY: run-srv
