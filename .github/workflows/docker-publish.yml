@@ -109,7 +109,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: deploy/production.Dockerfile
+          file: docker/production.Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm,darwin/amd64,darwin/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ github.ref_name }}
