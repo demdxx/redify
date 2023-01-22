@@ -5,7 +5,7 @@ services:
     image: redis:latest
 
   clickhouse:
-    image: yandex/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:latest
 
   pgdb:
     restart: always

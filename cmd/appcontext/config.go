@@ -22,9 +22,9 @@ type serverConfig struct {
 }
 
 type cacheConfig struct {
-	Connect string `json:"connect" yaml:"connect" toml:"connect" env:"CACHE_CONNECT" default:"memory"`
-	Size    int    `json:"size" yaml:"size" toml:"size" env:"CACHE_SIZE" default:"1000"`
-	TTL     int    `json:"ttl" yaml:"ttl" toml:"ttl" env:"CACHE_TTL" default:"60"`
+	Connect string        `json:"connect" yaml:"connect" toml:"connect" env:"CACHE_CONNECT" default:"memory"`
+	Size    int           `json:"size" yaml:"size" toml:"size" env:"CACHE_SIZE" default:"1000"`
+	TTL     time.Duration `json:"ttl" yaml:"ttl" toml:"ttl" env:"CACHE_TTL" default:"60s"`
 }
 
 type dataSourceKeyBind struct {

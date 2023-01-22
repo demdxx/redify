@@ -1,19 +1,35 @@
-package simplecache
+package rediscache
 
 import (
 	"context"
 	"fmt"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/demdxx/redify/internal/storage"
+	"github.com/elliotchance/redismock/v8"
+	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
 )
 
+// newTestRedis returns a redis.Cmdable.
+func newTestRedis(mr *miniredis.Miniredis) *redismock.ClientMock {
+	client := redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+	return redismock.NewNiceMock(client)
+}
+
 func TestDriver(t *testing.T) {
+	mr, err := miniredis.Run()
+	assert.NoError(t, err)
+	defer mr.Close()
+
 	var (
-		ctx            = context.Background()
-		cacheMain, err = New(10, 0)
-		caches         = []storage.Cacher{cacheMain}
+		mockCli   = newTestRedis(mr)
+		ctx       = context.Background()
+		cacheMain = newFromConnect(&retainConnect{Cmdable: mockCli}, 0, "")
+		caches    = []storage.Cacher{cacheMain}
 	)
 	if !assert.NoError(t, err, "new cache object") {
 		return

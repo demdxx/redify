@@ -46,11 +46,15 @@ func (d *proxyStore) Get(ctx context.Context, dbnum int, key string) ([]byte, er
 		return nil, err
 	}
 	if err == nil {
+		ctxlogger.Get(ctx).Debug("get value from cache",
+			zap.String("key", key), zap.Int("dbnum", dbnum))
 		return val, nil
 	}
 	if val, err = d.store.Get(ctx, dbnum, key); err != nil {
 		return nil, err
 	}
+	ctxlogger.Get(ctx).Debug("get value from store",
+		zap.String("key", key), zap.Int("dbnum", dbnum))
 	if err = d.cache.Set(ctx, key, val); err != nil {
 		return nil, err
 	}

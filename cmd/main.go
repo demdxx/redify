@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/demdxx/goconfig"
 	"go.uber.org/zap"
@@ -17,6 +19,7 @@ import (
 	"github.com/demdxx/redify/internal/storage/multistore"
 	"github.com/demdxx/redify/internal/storage/profiler"
 	"github.com/demdxx/redify/internal/storage/proxy"
+	"github.com/demdxx/redify/internal/storage/rediscache"
 	"github.com/demdxx/redify/internal/storage/simplecache"
 	"github.com/demdxx/redify/internal/zlogger"
 )
@@ -57,14 +60,14 @@ func main() {
 	defer cancel()
 
 	var (
-		cache  storage.Cacher
-		stores []storage.Driver
-		err    error
+		globalCache storage.Cacher
+		stores      []storage.Driver
+		err         error
 	)
 
 	// Connect global cache
 	if config.Cache.Connect != "" {
-		cache, err = simplecache.New(config.Cache.Size, config.Cache.TTL)
+		globalCache, err = connectCache(config.Cache.Connect, config.Cache.Size, config.Cache.TTL)
 		fatalError(err, "create simple cache")
 	}
 
@@ -75,7 +78,7 @@ func main() {
 		if cacheSupport, ok := st.(storage.CacheSupporter); ok && !cacheSupport.SupportCache() {
 			stores = append(stores, st)
 		} else {
-			stores = append(stores, proxy.New(ctx, cache, st, sconf.NotifyChannel))
+			stores = append(stores, proxy.New(ctx, globalCache, st, sconf.NotifyChannel))
 		}
 		for _, bind := range sconf.Binds {
 			err = st.Bind(ctx, &storage.BindConfig{
@@ -139,6 +142,17 @@ func main() {
 	}
 
 	wg.Wait()
+}
+
+func connectCache(connect string, size int, ttl time.Duration) (storage.Cacher, error) {
+	switch {
+	case strings.HasPrefix(connect, "redis://"):
+		return rediscache.New(connect, ttl)
+	case connect == "memory":
+		return simplecache.New(size, int(ttl.Seconds()))
+	default:
+		return nil, fmt.Errorf("invalid cache connect: %s", connect)
+	}
 }
 
 func fatalError(err error, msgs ...any) {

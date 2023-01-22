@@ -103,12 +103,6 @@ endef
 
 .PHONY: build
 build: ## Build application
-	# @echo "Build application"
-	# @rm -rf .build/redify
-	# GOOS=${BUILD_GOOS} GOARCH=${BUILD_GOARCH} CGO_ENABLED=${BUILD_CGO_ENABLED} GOARM=${BUILD_GOARM} \
-	# 	go build -ldflags "-X main.buildDate=`date -u +%Y%m%d.%H%M%S` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE}" \
-	# 		-tags ${APP_TAGS} -o ".build/redify" cmd/main.go
-	# file .build/redify
 	@echo "Build application"
 	@rm -rf .build
 	@$(call do_build,"cmd/main.go",redify)

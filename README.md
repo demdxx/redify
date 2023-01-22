@@ -32,9 +32,10 @@ redify --conf docker/example.config.yml
 
 ```yml
 cache:
+  # redis://host:port/{dbnum}?max_retries=0&min_retry_backoff=10s&max_retry_backoff=10s&dial_timeout=3s&read_timeout=3s&write_timeout=3s&pool_fifo=false&pool_size=10&min_idle_conns=60s&max_conn_age=60s&pool_timeout=300s&idle=100s&idle_check_frequency=3s&ttl=200s
   connect: "memory"
   size: 1000 # Max capacity
-  ttl: 60 # Seconds
+  ttl: 60s # Seconds
 sources:
   - connect: "postgres://dbuser:password@pgdb:5432/project?sslmode=disable"
     # Predefined in the postgresql notification channel
