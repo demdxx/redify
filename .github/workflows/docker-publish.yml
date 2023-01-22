@@ -74,6 +74,7 @@ jobs:
           path: |
             .build
             docker
+          key: ${{ runner.os }}-build
 
   build-docker:
     runs-on: ubuntu-latest
