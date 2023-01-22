@@ -16,14 +16,14 @@ ifeq (${BUILD_GOARCH},arm)
 	LOCAL_TARGETPLATFORM=${BUILD_GOOS}/${BUILD_GOARCH}/v${BUILD_GOARM}
 endif
 
-COMMIT_NUMBER ?= $(or ${COMMIT_NUMBER},)
+COMMIT_NUMBER ?= $(or ${DEPLOY_COMMIT_NUMBER},)
 ifeq (${COMMIT_NUMBER},)
-	COMMIT_NUMBER ?= $(shell git log -1 --pretty=format:%h)
+	COMMIT_NUMBER = $(shell git log -1 --pretty=format:%h)
 endif
 
-TAG_VALUE ?= $(or ${TAG_VALUE},)
+TAG_VALUE ?= $(or ${DEPLOY_TAG_VALUE},)
 ifeq (${TAG_VALUE},)
-	TAG_VALUE ?= `git describe --exact-match --tags $(git log -n1 --pretty='%h')`
+	TAG_VALUE = $(shell git describe --exact-match --tags `git log -n1 --pretty='%h'`)
 endif
 ifeq (${TAG_VALUE},)
 	TAG_VALUE = commit-${COMMIT_NUMBER}
@@ -33,10 +33,10 @@ PROJECT_WORKSPACE := redify
 
 DOCKER_COMPOSE := docker-compose -p $(PROJECT_WORKSPACE) -f docker/docker-compose.yml
 DOCKER_BUILDKIT := 1
-CONTAINER_IMAGE := demdxx/redify:latest
+CONTAINER_IMAGE := demdxx/redify
 
-OS_LIST   ?= $(or ${OS_LIST},linux darwin)
-ARCH_LIST ?= $(or ${ARCH_LIST},amd64 arm64 arm)
+OS_LIST   ?= $(or ${DEPLOY_OS_LIST},linux darwin)
+ARCH_LIST ?= $(or ${DEPLOY_ARCH_LIST},amd64 arm64 arm)
 
 APP_TAGS := "$(or ${APP_BUILD_TAGS},pgx)"
 
@@ -119,7 +119,15 @@ build-docker-dev: build
 	echo "Build develop docker image"
 	DOCKER_BUILDKIT=${DOCKER_BUILDKIT} docker build \
 		--build-arg TARGETPLATFORM=${LOCAL_TARGETPLATFORM} \
-		-t ${CONTAINER_IMAGE} -f docker/Dockerfile .
+		-t ${CONTAINER_IMAGE}:latest -f docker/Dockerfile .
+
+
+.PHONY: build-docker
+build-docker: build ## Build production docker image
+	@echo "Build docker image"
+	DOCKER_BUILDKIT=${DOCKER_BUILDKIT} docker buildx build \
+		--platform linux/amd64,linux/arm64,linux/arm,darwin/amd64,darwin/arm64 \
+		-t ${CONTAINER_IMAGE}:${TAG_VALUE} -t ${CONTAINER_IMAGE}:latest -f docker/production.Dockerfile .
 
 
 .PHONY: run-srv

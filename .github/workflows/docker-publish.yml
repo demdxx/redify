@@ -37,10 +37,12 @@ env:
   REGISTRY: docker.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-  OS_LIST: linux darwin
-  ARCH_LIST: amd64 arm64 arm
-  COMMIT_NUMBER: ${{ github.sha }}
-  TAG_VALUE: ${{ github.ref_name }}
+  DEPLOY_OS_LIST: linux darwin
+  DEPLOY_ARCH_LIST: amd64 arm64 arm
+  DEPLOY_COMMIT_NUMBER: ${{ github.sha }}
+  DEPLOY_TAG_VALUE: ${{ github.ref_name }}
+  TAG1: ${GITHUB_REF#refs/tags/}
+  TAG2: ${GITHUB_REF#refs/*/}
 
 
 jobs:
@@ -62,7 +64,17 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: ~1.19
+
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
 
       - name: Build app
         id: build
@@ -112,8 +124,6 @@ jobs:
           file: docker/production.Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm,darwin/amd64,darwin/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ github.ref_name }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ emv.IMAGE_NAME }}:${{ github.ref_name }},${{ emv.IMAGE_NAME }}:latest
 
     needs: [build-app]
