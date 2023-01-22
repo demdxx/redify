@@ -28,6 +28,12 @@ APP_BUILD_TAGS=pgx,clickhouse,mysql,mssql,kafka,redispub,nats make build
 redify --conf docker/example.config.yml
 ```
 
+## Run in docker
+
+```sh
+docker run -v ./my.config.yml:/config.yml -it --rm demdxx/refidy --conf /config.yml
+```
+
 ## Config example
 
 ```yml

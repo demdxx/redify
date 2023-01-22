@@ -29,8 +29,8 @@ DOCKER_COMPOSE := docker-compose -p $(PROJECT_WORKSPACE) -f docker/docker-compos
 DOCKER_BUILDKIT := 1
 CONTAINER_IMAGE := demdxx/redify:latest
 
-OS_LIST = linux darwin
-ARCH_LIST = amd64 arm64 arm
+OS_LIST   ?= $(or ${OS_LIST},linux darwin)
+ARCH_LIST ?= $(or ${ARCH_LIST},amd64 arm64 arm)
 
 APP_TAGS := "$(or ${APP_BUILD_TAGS},pgx)"
 
