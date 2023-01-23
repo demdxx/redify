@@ -31,7 +31,7 @@ endif
 
 PROJECT_WORKSPACE := redify
 
-DOCKER_COMPOSE := docker-compose -p $(PROJECT_WORKSPACE) -f docker/docker-compose.yml
+DOCKER_COMPOSE := docker-compose -p $(PROJECT_WORKSPACE) -f deploy/develop/docker-compose.yml
 DOCKER_BUILDKIT := 1
 CONTAINER_IMAGE := demdxx/redify
 
@@ -119,7 +119,7 @@ build-docker-dev: build
 	echo "Build develop docker image"
 	DOCKER_BUILDKIT=${DOCKER_BUILDKIT} docker build \
 		--build-arg TARGETPLATFORM=${LOCAL_TARGETPLATFORM} \
-		-t ${CONTAINER_IMAGE}:latest -f docker/Dockerfile .
+		-t ${CONTAINER_IMAGE}:latest -f deploy/develop/Dockerfile .
 
 
 .PHONY: build-docker
@@ -127,7 +127,7 @@ build-docker: build ## Build production docker image
 	@echo "Build docker image"
 	DOCKER_BUILDKIT=${DOCKER_BUILDKIT} docker buildx build \
 		--platform linux/amd64,linux/arm64,linux/arm,darwin/amd64,darwin/arm64 \
-		-t ${CONTAINER_IMAGE}:${TAG_VALUE} -t ${CONTAINER_IMAGE}:latest -f docker/production.Dockerfile .
+		-t ${CONTAINER_IMAGE}:${TAG_VALUE} -t ${CONTAINER_IMAGE}:latest -f deploy/production/Dockerfile .
 
 
 .PHONY: run-srv

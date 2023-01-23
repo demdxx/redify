@@ -10,8 +10,6 @@ services:
   pgdb:
     restart: always
     image: postgres:13
-    volumes:
-      - ../../.tmp/.pgdata:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_USER: ${DATABASE_USER}

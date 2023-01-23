@@ -31,7 +31,7 @@ redify --conf docker/example.config.yml
 ## Run in docker
 
 ```sh
-docker run -v ./my.config.yml:/config.yml -it --rm demdxx/refidy --conf /config.yml
+docker run -v ./my.config.yml:/config.yml -it --rm demdxx/refidy:latest --conf /config.yml
 ```
 
 ## Config example
