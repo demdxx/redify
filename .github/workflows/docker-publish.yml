@@ -85,7 +85,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: develop/production/Dockerfile
+          file: deploy/production/Dockerfile
           platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,darwin/amd64,darwin/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_NAME }}:${{ github.ref_name }},${{ env.IMAGE_NAME }}:latest
