@@ -11,7 +11,6 @@ on:
   workflow_run:
     workflows: [ Tests ]
     types: [ completed ]
-    tags: [ v* ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -45,6 +44,7 @@ jobs:
           ref: ${{ github.event.workflow_run.head_branch }}
       - run: git branch
       - run: env
+      - run: echo "${{ github.event.workflow_run.head_branch }}"
 
       - name: Set up Go
         uses: actions/setup-go@v3
