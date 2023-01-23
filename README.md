@@ -1,6 +1,7 @@
 # Redify (Any database as redis)
 
-[![Build Status](https://github.com/demdxx/redify/workflows/run%20tests/badge.svg)](https://github.com/demdxx/redify/actions?workflow=run%20tests)
+[![Testing Status](https://github.com/demdxx/redify/workflows/Tests/badge.svg)](https://github.com/demdxx/redify/actions?workflow=Tests)
+[![Publish Docker Status](https://github.com/demdxx/redify/workflows/Publish/badge.svg)](https://github.com/demdxx/redify/actions?workflow=Publish)
 [![Coverage Status](https://coveralls.io/repos/github/demdxx/redify/badge.svg?branch=main)](https://coveralls.io/github/demdxx/redify?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/demdxx/redify)](https://goreportcard.com/report/github.com/demdxx/redify)
 [![GoDoc](https://godoc.org/github.com/demdxx/redify?status.svg)](https://godoc.org/github.com/demdxx/redify)

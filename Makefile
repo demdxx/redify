@@ -37,8 +37,7 @@ CONTAINER_IMAGE := demdxx/redify
 
 OS_LIST   ?= $(or ${DEPLOY_OS_LIST},linux darwin)
 ARCH_LIST ?= $(or ${DEPLOY_ARCH_LIST},amd64 arm64 arm)
-
-APP_TAGS := "$(or ${APP_BUILD_TAGS},pgx)"
+APP_TAGS  ?= $(or ${APP_BUILD_TAGS},pgx)
 
 export GO111MODULE := on
 export PATH := $(GOBIN):$(PATH)

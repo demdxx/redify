@@ -1,4 +1,4 @@
-name: Docker
+name: Publish
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -9,9 +9,12 @@ on:
   # schedule:
   #   - cron: '44 0 * * *'
   workflow_run:
-    workflows: ["run tests"]
-    types: [ completed ]
-    tags: [ 'v*' ]
+    workflows:
+      - Test
+    types:
+      - completed
+    tags:
+      - v*
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -22,6 +25,7 @@ env:
   DEPLOY_ARCH_LIST: amd64 arm64 arm
   DEPLOY_COMMIT_NUMBER: ${{ github.sha }}
   DEPLOY_TAG_VALUE: ${{ github.ref_name }}
+  APP_BUILD_TAGS: pgx,mysql,allstreams,clickhouse
 
 
 jobs:
