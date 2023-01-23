@@ -12,9 +12,6 @@ on:
     workflows: ["run tests"]
     types: [ completed ]
     tags: [ 'v*' ]
-    branches:
-      - master
-      - main
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -25,8 +22,6 @@ env:
   DEPLOY_ARCH_LIST: amd64 arm64 arm
   DEPLOY_COMMIT_NUMBER: ${{ github.sha }}
   DEPLOY_TAG_VALUE: ${{ github.ref_name }}
-  TAG1: ${GITHUB_REF#refs/tags/}
-  TAG2: ${GITHUB_REF#refs/*/}
 
 
 jobs:
