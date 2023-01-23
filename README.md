@@ -1,12 +1,11 @@
 # Redify (Any database as redis)
 
+![License](https://img.shields.io/github/license/demdxx/redify)
+[![Docker Pulls](https://img.shields.io/docker/pulls/demdxx/redify.svg?maxAge=604800)](https://hub.docker.com/r/docker/demdxx/redify)
+[![Go Report Card](https://goreportcard.com/badge/github.com/demdxx/redify)](https://goreportcard.com/report/github.com/demdxx/redify)
+[![Coverage Status](https://coveralls.io/repos/github/demdxx/redify/badge.svg?branch=main)](https://coveralls.io/github/demdxx/redify?branch=main)
 [![Testing Status](https://github.com/demdxx/redify/workflows/Tests/badge.svg)](https://github.com/demdxx/redify/actions?workflow=Tests)
 [![Publish Docker Status](https://github.com/demdxx/redify/workflows/Publish/badge.svg)](https://github.com/demdxx/redify/actions?workflow=Publish)
-[![Coverage Status](https://coveralls.io/repos/github/demdxx/redify/badge.svg?branch=main)](https://coveralls.io/github/demdxx/redify?branch=main)
-[![Go Report Card](https://goreportcard.com/badge/github.com/demdxx/redify)](https://goreportcard.com/report/github.com/demdxx/redify)
-[![GoDoc](https://godoc.org/github.com/demdxx/redify?status.svg)](https://godoc.org/github.com/demdxx/redify)
-
-> License Apache 2.0
 
 Redify is the optimized key-value proxy for quick access and cache
 of any other database throught Redis and/or HTTP protocol.
