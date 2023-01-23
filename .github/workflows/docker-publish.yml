@@ -9,12 +9,9 @@ on:
   # schedule:
   #   - cron: '44 0 * * *'
   workflow_run:
-    workflows:
-      - Test
-    types:
-      - completed
-    tags:
-      - v*
+    workflows: [ Tests ]
+    types: [ completed ]
+    tags: [ v* ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -42,6 +39,7 @@ jobs:
       id-token: write
 
     steps:
+      - run: env
       - name: Checkout repository
         uses: actions/checkout@v3
 
