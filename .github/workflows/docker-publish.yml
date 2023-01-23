@@ -11,6 +11,7 @@ on:
   workflow_run:
     workflows: [ Tests ]
     types: [ completed ]
+    tags: [ v* ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -26,7 +27,6 @@ env:
 
 jobs:
   build:
-    if: startsWith(github.event.workflow_run.head_branch, 'refs/tags/')
 
     runs-on: ubuntu-latest
     environment: "docker hub"
