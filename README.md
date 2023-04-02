@@ -43,6 +43,14 @@ cache:
   size: 1000 # Max capacity
   ttl: 60s # Seconds
 sources:
+  - connect: "clickhouse://dbuser:password@chdb:9000/project"
+    binds:
+    - dbnum: 0
+      readonly: yes
+      reorganize_nested: yes # Reorganize nested fields to deep structure
+                             # Example: {"a.b": [1,2], "a.c": ["X","Y"]} -> {"a": [{"b": 1, "c": "X"}, {"b": 2, "c": "Y"}]}
+      table_name: "events.event_local"
+      key: "event_{{id}}"
   - connect: "postgres://dbuser:password@pgdb:5432/project?sslmode=disable"
     # Predefined in the postgresql notification channel
     notify_channel: redify_update

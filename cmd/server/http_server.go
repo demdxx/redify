@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 
 	"github.com/demdxx/redify/internal/storage"
 )
@@ -24,11 +25,13 @@ func (srv *HTTPServer) ListenAndServe(ctx context.Context, addr string) error {
 		ServerHeader: "redify",
 		ReadTimeout:  srv.RequestTimeout,
 	})
+	srvApp.Use(logger.New(logger.ConfigDefault))
 
 	srvApp.Get("/:dbnum/:key", srv.get)
 	srvApp.Put("/:dbnum/:key", srv.set)
 	srvApp.Post("/:dbnum/:key", srv.set)
-	srvApp.Get("/:dbnum/list/:pattern", srv.list)
+	srvApp.Get("/:dbnum/list/:pattern", srv.keys) // Deprecated
+	srvApp.Get("/:dbnum/keys/:pattern", srv.keys)
 	srvApp.Delete("/:dbnum/:key", srv.del)
 
 	return srvApp.Listen(addr)
@@ -41,26 +44,26 @@ func (srv *HTTPServer) get(c *fiber.Ctx) error {
 		dbnum, _   = c.ParamsInt("dbnum")
 		value, err = srv.Driver.Get(ctx, dbnum, key)
 	)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 		return sendError(c, err)
 	}
-	if value == nil {
+	if errors.Is(err, storage.ErrNotFound) || errors.Is(err, storage.ErrNoKey) {
 		return sendNotFound(c)
 	}
 	return sendJSON(c, value)
 }
 
-func (srv *HTTPServer) list(c *fiber.Ctx) error {
+func (srv *HTTPServer) keys(c *fiber.Ctx) error {
 	var (
 		ctx       = c.UserContext()
 		pattern   = c.Params("pattern")
 		dbnum, _  = c.ParamsInt("dbnum")
 		keys, err = srv.Driver.Keys(ctx, dbnum, pattern)
 	)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 		return sendError(c, err)
 	}
-	if keys == nil {
+	if errors.Is(err, storage.ErrNotFound) || errors.Is(err, storage.ErrNoKey) {
 		return sendNotFound(c)
 	}
 	return sendJSONObject(c, keys)
@@ -86,7 +89,7 @@ func (srv *HTTPServer) del(c *fiber.Ctx) error {
 		dbnum, _ = c.ParamsInt("dbnum")
 		err      = srv.Driver.Del(ctx, dbnum, key)
 	)
-	if errors.Is(err, storage.ErrNotFound) {
+	if errors.Is(err, storage.ErrNotFound) || errors.Is(err, storage.ErrNoKey) {
 		return sendNotFound(c)
 	}
 	if err != nil {
@@ -106,8 +109,10 @@ func sendOK(c *fiber.Ctx) error {
 }
 
 func sendError(c *fiber.Ctx, err error) error {
-	return sendJSON(c, []byte(`{"status":"error","error":"`+
-		strings.ReplaceAll(err.Error(), `"`, `\"`)+`"}`))
+	_ = c.SendStatus(fiber.StatusInternalServerError)
+	c.Response().Header.Add("content-type", "application/json")
+	return c.SendString(`{"status":"error","error":"` +
+		strings.ReplaceAll(err.Error(), `"`, `\"`) + `"}`)
 }
 
 func sendJSONObject(c *fiber.Ctx, obj any) error {

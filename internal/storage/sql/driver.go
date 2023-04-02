@@ -24,7 +24,7 @@ func Open(ctx context.Context, driver, connURL string) (storage.Driver, error) {
 	}
 	var syntax Syntax
 	switch driver {
-	case "postgresql", "pgx":
+	case "postgres", "postgresql", "pgx":
 		syntax = NewAbstractSyntax(`"`)
 	case "mysql":
 		syntax = NewMysqlSyntax()
@@ -104,10 +104,10 @@ func (dr *sqlStore) Bind(ctx context.Context, conf *storage.BindConfig) error {
 	var bind *Bind
 	if conf.GetQuery != "" {
 		bind = NewBind(dr.db, conf.DBNum, dr.syntax,
-			conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery)
+			conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery, conf.ReorganizeNested)
 	} else if conf.TableName != "" {
 		bind = NewBindFromTableName(dr.db, conf.DBNum, dr.syntax,
-			conf.Pattern, conf.TableName, conf.WhereExt, conf.Readonly)
+			conf.Pattern, conf.TableName, conf.WhereExt, conf.Readonly, conf.ReorganizeNested)
 	} else {
 		return storage.ErrInvalidBindConfig
 	}

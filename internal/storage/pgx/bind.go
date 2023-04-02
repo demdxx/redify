@@ -27,19 +27,35 @@ type pgpoolIface interface {
 type Bind struct {
 	conn pgpoolIface
 	sql.BindAbstract
+	minSizeOfRecord int
 }
 
-func NewBind(conn pgpoolIface, dbnum int, syntax Syntax, pattern, getQuery, listQuery, upsertQuery, delQuery string) *Bind {
+// NewBind create new sql bind instance for the specified database
+func NewBind(
+	conn pgpoolIface,
+	dbnum int,
+	syntax Syntax,
+	pattern, getQuery, listQuery, upsertQuery, delQuery string,
+) *Bind {
 	return &Bind{
-		BindAbstract: *sql.NewBindAbstract(dbnum, syntax, pattern, getQuery, listQuery, upsertQuery, delQuery),
-		conn:         conn,
+		BindAbstract:    *sql.NewBindAbstract(dbnum, syntax, pattern, getQuery, listQuery, upsertQuery, delQuery),
+		conn:            conn,
+		minSizeOfRecord: 10,
 	}
 }
 
-func NewBindFromTableName(conn pgpoolIface, dbnum int, syntax Syntax, pattern, tableName, whereExt string, readonly bool) *Bind {
+// NewBindFromTableName create new sql bind instance for the specified database
+func NewBindFromTableName(
+	conn pgpoolIface,
+	dbnum int,
+	syntax Syntax,
+	pattern, tableName, whereExt string,
+	readonly bool,
+) *Bind {
 	return &Bind{
-		BindAbstract: *sql.NewBindAbstractFromTableName(dbnum, syntax, pattern, tableName, whereExt, readonly),
-		conn:         conn,
+		BindAbstract:    *sql.NewBindAbstractFromTableName(dbnum, syntax, pattern, tableName, whereExt, readonly),
+		conn:            conn,
+		minSizeOfRecord: 10,
 	}
 }
 
@@ -48,14 +64,23 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 	if err != nil {
 		return nil, err
 	}
-	record := make(Record, 10)
+	record := make(Record, b.minSizeOfRecord)
 	err = pgxscan.ScanOne(&record, rows)
+	if err != nil {
+		return nil, err
+	}
+	if len(record) != b.minSizeOfRecord {
+		b.minSizeOfRecord = len(record)
+	}
 	return record, err
 }
 
 func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record, error) {
 	res := make([]Record, 0, 10)
 	err := pgxscan.Select(ctx, b.conn, &res, b.ListQuery.String(), b.ListQuery.Args(ectx)...)
+	if err != nil {
+		return nil, err
+	}
 	return res, err
 }
 

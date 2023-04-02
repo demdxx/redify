@@ -152,7 +152,7 @@ func (srv *RedisServer) cmdGet(ctx context.Context, conn redcon.Conn, dbnum int,
 		key        = string(cmd.Args[1])
 		value, err = srv.Driver.Get(ctx, dbnum, key)
 	)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 		conn.WriteError("ERR " + err.Error())
 		return
 	}
@@ -174,7 +174,7 @@ func (srv *RedisServer) cmdMGet(ctx context.Context, conn redcon.Conn, dbnum int
 			key        = string(cmd.Args[i])
 			value, err = srv.Driver.Get(ctx, dbnum, key)
 		)
-		if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 			ctxlogger.Get(ctx).Error("mget value", zap.Error(err), zap.String("key", key))
 		}
 		if value == nil {
@@ -195,7 +195,7 @@ func (srv *RedisServer) cmdHGet(ctx context.Context, conn redcon.Conn, dbnum int
 		name       = string(cmd.Args[2])
 		value, err = srv.Driver.Get(ctx, dbnum, key)
 	)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 		ctxlogger.Get(ctx).Error("mget value", zap.Error(err), zap.String("key", key))
 	}
 	if value == nil {
@@ -230,7 +230,7 @@ func (srv *RedisServer) cmdHGetall(ctx context.Context, conn redcon.Conn, dbnum 
 		key        = string(cmd.Args[1])
 		value, err = srv.Driver.Get(ctx, dbnum, key)
 	)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 		ctxlogger.Get(ctx).Error("mget value", zap.Error(err), zap.String("key", key))
 	}
 	if value == nil {
@@ -306,11 +306,11 @@ func (srv *RedisServer) cmdDel(ctx context.Context, conn redcon.Conn, dbnum int,
 		key = string(cmd.Args[1])
 		err = srv.Driver.Del(ctx, dbnum, key)
 	)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 		conn.WriteError("ERR " + err.Error())
 		return
 	}
-	if errors.Is(err, storage.ErrNotFound) {
+	if errors.Is(err, storage.ErrNotFound) || errors.Is(err, storage.ErrNoKey) {
 		conn.WriteInt(0)
 	} else {
 		conn.WriteInt(1)
@@ -326,7 +326,7 @@ func (srv *RedisServer) cmdKeys(ctx context.Context, conn redcon.Conn, dbnum int
 		pattern   = string(cmd.Args[1])
 		keys, err = srv.Driver.Keys(ctx, dbnum, pattern)
 	)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
 		conn.WriteError("ERR " + err.Error())
 		return
 	}

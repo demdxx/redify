@@ -82,15 +82,16 @@ func main() {
 		}
 		for _, bind := range sconf.Binds {
 			err = st.Bind(ctx, &storage.BindConfig{
-				Pattern:     bind.Key,
-				DBNum:       bind.DBNum,
-				TableName:   bind.TableName,
-				Readonly:    bind.Readonly,
-				WhereExt:    bind.WhereExt,
-				GetQuery:    bind.GetQuery,
-				ListQuery:   bind.ListQuery,
-				UpsertQuery: bind.UpsertQuery,
-				DelQuery:    bind.DelQuery,
+				Pattern:          bind.Key,
+				DBNum:            bind.DBNum,
+				TableName:        bind.TableName,
+				Readonly:         bind.Readonly,
+				WhereExt:         bind.WhereExt,
+				GetQuery:         bind.GetQuery,
+				ListQuery:        bind.ListQuery,
+				UpsertQuery:      bind.UpsertQuery,
+				DelQuery:         bind.DelQuery,
+				ReorganizeNested: bind.ReorganizeNested,
 			})
 			fatalError(err, sconf.Connect+" @ bind error")
 		}
