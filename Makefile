@@ -113,6 +113,11 @@ fmt: ## Run formatting code
 	@gofmt -w ${GO_FMT_FLAGS} $$(go list -f "{{ .Dir }}" ./...); if [ "$${errors}" != "" ]; then echo "$${errors}"; fi
 
 
+.PHONY: platform_list
+platform_list:
+	@echo $(DOCKER_PLATFORM_LIST)
+
+
 .PHONY: run
 run: ## Run current server
 	@echo "Run current server"

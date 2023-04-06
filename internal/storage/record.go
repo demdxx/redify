@@ -1,13 +1,23 @@
 package storage
 
 import (
-	"errors"
+	"encoding/json"
 	"strings"
 
 	"github.com/demdxx/gocast/v2"
+	"github.com/pkg/errors"
 )
 
-var ErrStructureOfTheRecordCannotBeReorganized = errors.New("structure of the record cannot be reorganized. All fields with the same prefix must be represented as a key with separator `.` in the key name and have the same size")
+var (
+	ErrStructureOfTheRecordCannotBeReorganized = errors.New("structure of the record cannot be reorganized. All fields with the same prefix must be represented as a key with separator `.` in the key name and have the same size")
+	ErrUnsupportedDatatype                     = errors.New("unsupported data type")
+	ErrUnsupportedDatetypeConversion           = errors.New("unsupported data type conversion")
+)
+
+type DatatypeMapper struct {
+	Name string
+	Type string
+}
 
 // Record is a map of key-value pairs
 type Record map[string]any
@@ -77,6 +87,79 @@ func (r Record) ReorganizeNested() (Record, error) {
 		}
 	}
 	return res, nil
+}
+
+// DatetypeCasting convert values to the specified types
+func (r Record) DatetypeCasting(mappers ...DatatypeMapper) (_ Record, err error) {
+	for _, mapper := range mappers {
+		_, ok := r[mapper.Name]
+		mType := strings.ToLower(mapper.Type)
+		if ok {
+			names := []string{mapper.Name}
+			err = r.fieldCasting(r, names, names, mType)
+		} else {
+			names := strings.Split(mapper.Name, ".")
+			err = r.fieldCasting(r, names, names, mType)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return r, nil
+}
+
+func (r Record) fieldCasting(record Record, field, completeField []string, dtype string) error {
+	val := record[field[0]]
+	if val == nil {
+		if dtype == "json" {
+			record[field[0]] = json.RawMessage("null")
+		}
+		return nil
+	}
+	if len(field) == 1 {
+		var err error
+		switch dtype {
+		case "json":
+			switch val.(type) {
+			case json.RawMessage:
+			case string, []byte:
+				data := gocast.Str(val)
+				if data != "" {
+					// Validate JSON
+					if err = json.Unmarshal([]byte(data), &[]any{nil}[0]); err == nil {
+						record[field[0]] = json.RawMessage(data)
+					}
+				}
+			default:
+				var data []byte
+				if data, err = json.Marshal(val); err == nil {
+					record[field[0]] = json.RawMessage(data)
+				}
+			}
+		case "string":
+			record[field[0]], err = gocast.TryStr(val)
+		case "int":
+			record[field[0]], err = gocast.TryNumber[int64](val)
+		case "float":
+			record[field[0]], err = gocast.TryNumber[float64](val)
+		case "bool":
+			// TODO: add boolean type check
+			record[field[0]] = gocast.Bool(val)
+		default:
+			err = errors.Wrap(ErrUnsupportedDatatype, dtype)
+		}
+		return err
+	}
+	rec, _ := val.([]Record)
+	if rec == nil {
+		return errors.Wrap(ErrUnsupportedDatetypeConversion, strings.Join(completeField, "."))
+	}
+	for i := range rec {
+		if err := r.fieldCasting(rec[i], field[1:], completeField, dtype); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func aggregateWithPrefix(res Record, path []string, value any) {

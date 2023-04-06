@@ -31,6 +31,7 @@ func TestBind1(t *testing.T) {
 			"SELECT username FROM users",
 			"INSERT INTO users (username) VALUES({{username}})",
 			"DELETE FROM users WHERE username={{username}}",
+			nil,
 		)
 		ectx = keypattern.ExecContext{
 			"username": "testuser",
@@ -51,7 +52,7 @@ func TestBind2(t *testing.T) {
 			mockPool, 0,
 			sql.NewAbstractSyntax(`"`),
 			"users_{{username}}",
-			"users", "", false,
+			"users", "", nil, false,
 		)
 		ectx = keypattern.ExecContext{
 			"username": "testuser",

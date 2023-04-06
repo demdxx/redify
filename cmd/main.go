@@ -92,6 +92,7 @@ func main() {
 				UpsertQuery:      bind.UpsertQuery,
 				DelQuery:         bind.DelQuery,
 				ReorganizeNested: bind.ReorganizeNested,
+				DatatypeMapping:  datatipeMappingCast(bind.DatatypeMapping),
 			})
 			fatalError(err, sconf.Connect+" @ bind error")
 		}
@@ -160,4 +161,15 @@ func fatalError(err error, msgs ...any) {
 	if err != nil {
 		log.Fatalln(append(msgs, err)...)
 	}
+}
+
+func datatipeMappingCast(mappers []appcontext.DatatypeMapper) []storage.DatatypeMapper {
+	result := make([]storage.DatatypeMapper, len(mappers))
+	for i, m := range mappers {
+		result[i] = storage.DatatypeMapper{
+			Name: m.Name,
+			Type: m.Type,
+		}
+	}
+	return result
 }

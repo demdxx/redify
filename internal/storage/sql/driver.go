@@ -104,10 +104,10 @@ func (dr *sqlStore) Bind(ctx context.Context, conf *storage.BindConfig) error {
 	var bind *Bind
 	if conf.GetQuery != "" {
 		bind = NewBind(dr.db, conf.DBNum, dr.syntax,
-			conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery, conf.ReorganizeNested)
+			conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery, conf.DatatypeMapping, conf.ReorganizeNested)
 	} else if conf.TableName != "" {
 		bind = NewBindFromTableName(dr.db, conf.DBNum, dr.syntax,
-			conf.Pattern, conf.TableName, conf.WhereExt, conf.Readonly, conf.ReorganizeNested)
+			conf.Pattern, conf.TableName, conf.WhereExt, conf.Readonly, conf.DatatypeMapping, conf.ReorganizeNested)
 	} else {
 		return storage.ErrInvalidBindConfig
 	}

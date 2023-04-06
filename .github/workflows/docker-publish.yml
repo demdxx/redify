@@ -13,6 +13,7 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
   DEPLOY_OS_LIST: linux darwin
+  BUILD_GOAMD64_LIST: 1 2 3 4
   DEPLOY_ARCH_LIST: amd64 arm64 arm
   DEPLOY_COMMIT_NUMBER: ${{ github.sha }}
   DEPLOY_TAG_VALUE: ${{ github.event.workflow_run.head_branch }}
@@ -78,6 +79,6 @@ jobs:
         with:
           context: .
           file: deploy/production/Dockerfile
-          platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,darwin/amd64,darwin/arm64
+          platforms: linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/amd64/v4,linux/arm64,linux/arm/v6,linux/arm/v7,darwin/amd64,darwin/amd64/v2,darwin/amd64/v3,darwin/amd64/v4,darwin/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_NAME }}:${{ github.event.workflow_run.head_branch }},${{ env.IMAGE_NAME }}:latest

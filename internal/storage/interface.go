@@ -15,16 +15,17 @@ var (
 )
 
 type BindConfig struct {
-	Pattern          string `json:"pattern" xml:"pattern" yaml:"pattern" toml:"pattern"`
-	DBNum            int    `json:"dbnum" xml:"dbnum" yaml:"dbnum" toml:"dbnum"`
-	TableName        string `json:"table_name" xml:"table_name" yaml:"table_name" toml:"table_name"`
-	Readonly         bool   `json:"readonly" xml:"readonly" yaml:"readonly" toml:"readonly"`
-	WhereExt         string `json:"where_ext" xml:"where_ext" yaml:"where_ext" toml:"where_ext"`
-	GetQuery         string `json:"get_query" xml:"get_query" yaml:"get_query" toml:"get_query"`
-	ListQuery        string `json:"list_query" xml:"list_query" yaml:"list_query" toml:"list_query"`
-	UpsertQuery      string `json:"upsert_query" xml:"upsert_query" yaml:"upsert_query" toml:"upsert_query"`
-	DelQuery         string `json:"del_query" xml:"del_query" yaml:"del_query" toml:"del_query"`
-	ReorganizeNested bool   `json:"reorganize_nested" xml:"reorganize_nested" yaml:"reorganize_nested" toml:"reorganize_nested"`
+	Pattern          string           `json:"pattern" xml:"pattern" yaml:"pattern" toml:"pattern"`
+	DBNum            int              `json:"dbnum" xml:"dbnum" yaml:"dbnum" toml:"dbnum"`
+	TableName        string           `json:"table_name" xml:"table_name" yaml:"table_name" toml:"table_name"`
+	Readonly         bool             `json:"readonly" xml:"readonly" yaml:"readonly" toml:"readonly"`
+	WhereExt         string           `json:"where_ext" xml:"where_ext" yaml:"where_ext" toml:"where_ext"`
+	GetQuery         string           `json:"get_query" xml:"get_query" yaml:"get_query" toml:"get_query"`
+	ListQuery        string           `json:"list_query" xml:"list_query" yaml:"list_query" toml:"list_query"`
+	UpsertQuery      string           `json:"upsert_query" xml:"upsert_query" yaml:"upsert_query" toml:"upsert_query"`
+	DelQuery         string           `json:"del_query" xml:"del_query" yaml:"del_query" toml:"del_query"`
+	ReorganizeNested bool             `json:"reorganize_nested" xml:"reorganize_nested" yaml:"reorganize_nested" toml:"reorganize_nested"`
+	DatatypeMapping  []DatatypeMapper `json:"datatype_mapping" xml:"datatype_mapping" yaml:"datatype_mapping" toml:"datatype_mapping"`
 }
 
 // Driver storage description

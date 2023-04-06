@@ -7,16 +7,15 @@
 [![Testing Status](https://github.com/demdxx/redify/workflows/Tests/badge.svg)](https://github.com/demdxx/redify/actions?workflow=Tests)
 [![Publish Docker Status](https://github.com/demdxx/redify/workflows/Publish/badge.svg)](https://github.com/demdxx/redify/actions?workflow=Publish)
 
-Redify is the optimized key-value proxy for quick access and cache
-of any other database throught Redis and/or HTTP protocol.
-Can be used for any kind of content web project to accelerate access to data
-to make it faster, simpler and more reliable.
+Redify is a tool that makes it faster and easier to access and cache data from
+other databases. It does this by using Redis and/or HTTP protocol as a key-value
+proxy. It's useful for any web project that deals with content, as it can speed
+up data access and make it more reliable.
 
-Modern websites it's a banch of small services which use many different databases.
-Almost always for data reading used some key-value storage for caches.
-The project will help to create more simple content website without using connection
-to R_DBMS with simple wide used protocol without implementation of complex
-application controllers and custom caches.
+Modern websites consist of many small services that use different databases. To
+improve data reading, a key-value storage for caches is often used. Redify simplifies
+the process of creating content websites by using a widely-used protocol and
+eliminating the need for complex application controllers and custom caches.
 
 ## Build project
 
@@ -51,6 +50,9 @@ sources:
                              # Example: {"a.b": [1,2], "a.c": ["X","Y"]} -> {"a": [{"b": 1, "c": "X"}, {"b": 2, "c": "Y"}]}
       table_name: "events.event_local"
       key: "event_{{id}}"
+      datatype_mapping:
+        - name: a.b
+          type: int # json, string, int, float, bool
   - connect: "postgres://dbuser:password@pgdb:5432/project?sslmode=disable"
     # Predefined in the postgresql notification channel
     notify_channel: redify_update
@@ -93,7 +95,7 @@ sources:
 For using of Redis protocol.
 
 ```sh
-export SERVER_REDIS_LISTEN=:8080
+export SERVER_REDIS_LISTEN=:8081
 export SERVER_REDIS_READ_TIMEOUT=120s
 ```
 
@@ -145,14 +147,14 @@ curl -XGET "http://localhost:8080/0/post_hello"
 > POST /:dbnum/:key
 
 ```sh
-curl -d "@data.json" -XPOST "http://localhost:8080/0/list/post_hello"
+curl -d "@data.json" -XPOST "http://localhost:8080/0/post_hello"
 {"status":"OK"}
 ```
 
-> GET /:dbnum/list/:pattern
+> GET /:dbnum/keys/:pattern
 
 ```sh
-curl -XGET "http://localhost:8080/0/list/post_*"
+curl -XGET "http://localhost:8080/0/keys/post_*"
 {"status":"OK", "result":["post_post-1","post_post-2","post_hello","post_bye"]}
 ```
 
@@ -207,11 +209,11 @@ AFTER INSERT OR UPDATE OR DELETE ON products
     FOR EACH ROW EXECUTE PROCEDURE notify_event();
 ```
 
-## Event streaming
+## Event Streaming
 
-In some cases, it will be convenient to use storage keys as a mechanism
-for publishing events to message publishing systems (queues).
-It can be used to publish intrasystem events or form pending actions.
+Sometimes, it's helpful to use storage keys as a way to publish events to message
+publishing systems, such as queues. This approach can be used to publish events
+that occur within a system, or to create pending actions.
 
 ### Build
 ```ss

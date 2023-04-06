@@ -105,10 +105,10 @@ func (pg *Driver) Bind(ctx context.Context, conf *storage.BindConfig) error {
 	var bind *Bind
 	if conf.GetQuery != "" {
 		bind = NewBind(pg.pool, conf.DBNum, pg.syntax,
-			conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery)
+			conf.Pattern, conf.GetQuery, conf.ListQuery, conf.UpsertQuery, conf.DelQuery, conf.DatatypeMapping)
 	} else if conf.TableName != "" {
 		bind = NewBindFromTableName(pg.pool, conf.DBNum, pg.syntax,
-			conf.Pattern, conf.TableName, conf.WhereExt, conf.Readonly)
+			conf.Pattern, conf.TableName, conf.WhereExt, conf.DatatypeMapping, conf.Readonly)
 	} else {
 		return storage.ErrInvalidBindConfig
 	}

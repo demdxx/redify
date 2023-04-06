@@ -24,10 +24,11 @@ func NewBind(
 	dbnum int,
 	syntax Syntax,
 	pattern, getQuery, listQuery, upsertQuery, delQuery string,
+	datatypesMapping []storage.DatatypeMapper,
 	reorganizeNested bool,
 ) *Bind {
 	return &Bind{
-		BindAbstract:     *NewBindAbstract(dbnum, syntax, pattern, getQuery, listQuery, upsertQuery, delQuery),
+		BindAbstract:     *NewBindAbstract(dbnum, syntax, pattern, getQuery, listQuery, upsertQuery, delQuery, datatypesMapping),
 		db:               db,
 		reorganizeNested: reorganizeNested,
 		minSizeOfRecord:  10,
@@ -41,10 +42,11 @@ func NewBindFromTableName(
 	syntax Syntax,
 	pattern, tableName, whereExt string,
 	readonly bool,
+	datatypesMapping []storage.DatatypeMapper,
 	reorganizeNested bool,
 ) *Bind {
 	return &Bind{
-		BindAbstract:     *NewBindAbstractFromTableName(dbnum, syntax, pattern, tableName, whereExt, readonly),
+		BindAbstract:     *NewBindAbstractFromTableName(dbnum, syntax, pattern, tableName, whereExt, datatypesMapping, readonly),
 		db:               db,
 		reorganizeNested: reorganizeNested,
 		minSizeOfRecord:  10,
@@ -76,6 +78,13 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 		}
 		record = newRecord
 	}
+
+	if len(b.DatatypesMapping) > 0 {
+		record, err = record.DatetypeCasting(b.DatatypesMapping...)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return record, err
 }
 
@@ -105,6 +114,12 @@ func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record,
 				return nil, err
 			}
 			record = newRecord
+		}
+		if len(b.DatatypesMapping) > 0 {
+			record, err = record.DatetypeCasting(b.DatatypesMapping...)
+			if err != nil {
+				return nil, err
+			}
 		}
 		res = append(res, record)
 	}

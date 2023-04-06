@@ -21,28 +21,30 @@ type Syntax interface {
 }
 
 type BindAbstract struct {
-	DBNum       int
-	Pattern     *keypattern.Pattern
-	Syntax      Syntax
-	GetQuery    *query
-	ListQuery   *query
-	UpsertQuery *query
-	DelQuery    *query
+	DBNum            int
+	Pattern          *keypattern.Pattern
+	Syntax           Syntax
+	GetQuery         *query
+	ListQuery        *query
+	UpsertQuery      *query
+	DelQuery         *query
+	DatatypesMapping []storage.DatatypeMapper
 }
 
-func NewBindAbstract(dbnum int, syntax Syntax, pattern, getQuery, listQuery, upsertQuery, delQuery string) *BindAbstract {
+func NewBindAbstract(dbnum int, syntax Syntax, pattern, getQuery, listQuery, upsertQuery, delQuery string, datatypesMapping []storage.DatatypeMapper) *BindAbstract {
 	return &BindAbstract{
-		DBNum:       dbnum,
-		Pattern:     keypattern.NewPatternFromExpression(pattern),
-		Syntax:      syntax,
-		GetQuery:    ParseQuery(getQuery),
-		ListQuery:   ParseQuery(listQuery),
-		UpsertQuery: ParseQuery(upsertQuery),
-		DelQuery:    ParseQuery(delQuery),
+		DBNum:            dbnum,
+		Pattern:          keypattern.NewPatternFromExpression(pattern),
+		Syntax:           syntax,
+		GetQuery:         ParseQuery(getQuery),
+		ListQuery:        ParseQuery(listQuery),
+		UpsertQuery:      ParseQuery(upsertQuery),
+		DelQuery:         ParseQuery(delQuery),
+		DatatypesMapping: datatypesMapping,
 	}
 }
 
-func NewBindAbstractFromTableName(dbnum int, syntax Syntax, pattern, tableName, whereExt string, readonly bool) *BindAbstract {
+func NewBindAbstractFromTableName(dbnum int, syntax Syntax, pattern, tableName, whereExt string, datatypesMapping []storage.DatatypeMapper, readonly bool) *BindAbstract {
 	var (
 		ptrObj           = keypattern.NewPatternFromExpression(pattern)
 		keyFields        = ptrObj.Keys()
@@ -62,13 +64,14 @@ func NewBindAbstractFromTableName(dbnum int, syntax Syntax, pattern, tableName, 
 		upinsertQyeryObj = ParseQuery(syntax.UpsertQuery(tableName, dataValues, keyFields))
 	}
 	return &BindAbstract{
-		DBNum:       dbnum,
-		Syntax:      syntax,
-		Pattern:     ptrObj,
-		GetQuery:    ParseQuery(syntax.GetQuery(tableName, whereConds, whereExt)),
-		ListQuery:   ParseQuery(syntax.SelectQuery(tableName, nil, "")),
-		DelQuery:    delQyeryObj,
-		UpsertQuery: upinsertQyeryObj,
+		DBNum:            dbnum,
+		Syntax:           syntax,
+		Pattern:          ptrObj,
+		GetQuery:         ParseQuery(syntax.GetQuery(tableName, whereConds, whereExt)),
+		ListQuery:        ParseQuery(syntax.SelectQuery(tableName, nil, "")),
+		DelQuery:         delQyeryObj,
+		UpsertQuery:      upinsertQyeryObj,
+		DatatypesMapping: datatypesMapping,
 	}
 }
 

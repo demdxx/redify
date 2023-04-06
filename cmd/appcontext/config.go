@@ -27,17 +27,23 @@ type cacheConfig struct {
 	TTL     time.Duration `field:"ttl" json:"ttl" yaml:"ttl" toml:"ttl" env:"CACHE_TTL" default:"60s"`
 }
 
+type DatatypeMapper struct {
+	Name string `field:"name" json:"name" yaml:"name" toml:"name"`
+	Type string `field:"type" json:"type" yaml:"type" toml:"type"`
+}
+
 type dataSourceKeyBind struct {
-	DBNum            int    `field:"dbnum" json:"dbnum" yaml:"dbnum" toml:"dbnum"`
-	TableName        string `field:"table_name" json:"table_name,omitempty" yaml:"table_name" toml:"table_name"`
-	Key              string `field:"key" json:"key" yaml:"key" toml:"key"` // Pattern prefix1_{{id}}_suffix, prefix2_{{id}}_{{codename}}
-	Readonly         bool   `field:"readonly" json:"readonly" yaml:"readonly" toml:"readonly"`
-	WhereExt         string `field:"where_ext" json:"where_ext,omitempty" yaml:"where_ext" toml:"where_ext"`
-	GetQuery         string `field:"get_query" json:"get_query,omitempty" yaml:"get_query" toml:"get_query"`
-	ListQuery        string `field:"list_query" json:"list_query,omitempty" yaml:"list_query" toml:"list_query"`
-	UpsertQuery      string `field:"upsert_query" json:"upsert_query,omitempty" yaml:"upsert_query" toml:"upsert_query"`
-	DelQuery         string `field:"del_query" json:"del_query,omitempty" yaml:"del_query" toml:"del_query"`
-	ReorganizeNested bool   `field:"reorganize_nested" json:"reorganize_nested,omitempty" yaml:"reorganize_nested" toml:"reorganize_nested"` // Reorganize nested data to flat structure
+	DBNum            int              `field:"dbnum" json:"dbnum" yaml:"dbnum" toml:"dbnum"`
+	TableName        string           `field:"table_name" json:"table_name,omitempty" yaml:"table_name" toml:"table_name"`
+	Key              string           `field:"key" json:"key" yaml:"key" toml:"key"` // Pattern prefix1_{{id}}_suffix, prefix2_{{id}}_{{codename}}
+	Readonly         bool             `field:"readonly" json:"readonly" yaml:"readonly" toml:"readonly"`
+	WhereExt         string           `field:"where_ext" json:"where_ext,omitempty" yaml:"where_ext" toml:"where_ext"`
+	GetQuery         string           `field:"get_query" json:"get_query,omitempty" yaml:"get_query" toml:"get_query"`
+	ListQuery        string           `field:"list_query" json:"list_query,omitempty" yaml:"list_query" toml:"list_query"`
+	UpsertQuery      string           `field:"upsert_query" json:"upsert_query,omitempty" yaml:"upsert_query" toml:"upsert_query"`
+	DelQuery         string           `field:"del_query" json:"del_query,omitempty" yaml:"del_query" toml:"del_query"`
+	ReorganizeNested bool             `field:"reorganize_nested" json:"reorganize_nested,omitempty" yaml:"reorganize_nested" toml:"reorganize_nested"` // Reorganize nested data to flat structure
+	DatatypeMapping  []DatatypeMapper `field:"datatype_mapping" json:"datatype_mapping,omitempty" yaml:"datatype_mapping" toml:"datatype_mapping"`
 }
 
 type dataSource struct {

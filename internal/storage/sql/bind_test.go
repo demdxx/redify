@@ -32,6 +32,7 @@ func TestBind1(t *testing.T) {
 			"SELECT username FROM users",
 			"INSERT INTO users (username) VALUES({{username}})",
 			"DELETE FROM users WHERE username={{username}}",
+			nil,
 			false,
 		)
 		ectx = keypattern.ExecContext{
@@ -60,7 +61,7 @@ func TestBind2(t *testing.T) {
 			NewAbstractSyntax(`"`),
 			"users_{{username}}",
 			"users", "",
-			false, false,
+			false, nil, false,
 		)
 		ectx = keypattern.ExecContext{
 			"username": "testuser",

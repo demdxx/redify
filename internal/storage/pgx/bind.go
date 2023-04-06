@@ -36,9 +36,10 @@ func NewBind(
 	dbnum int,
 	syntax Syntax,
 	pattern, getQuery, listQuery, upsertQuery, delQuery string,
+	datatypesMapping []storage.DatatypeMapper,
 ) *Bind {
 	return &Bind{
-		BindAbstract:    *sql.NewBindAbstract(dbnum, syntax, pattern, getQuery, listQuery, upsertQuery, delQuery),
+		BindAbstract:    *sql.NewBindAbstract(dbnum, syntax, pattern, getQuery, listQuery, upsertQuery, delQuery, datatypesMapping),
 		conn:            conn,
 		minSizeOfRecord: 10,
 	}
@@ -50,10 +51,11 @@ func NewBindFromTableName(
 	dbnum int,
 	syntax Syntax,
 	pattern, tableName, whereExt string,
+	datatypesMapping []storage.DatatypeMapper,
 	readonly bool,
 ) *Bind {
 	return &Bind{
-		BindAbstract:    *sql.NewBindAbstractFromTableName(dbnum, syntax, pattern, tableName, whereExt, readonly),
+		BindAbstract:    *sql.NewBindAbstractFromTableName(dbnum, syntax, pattern, tableName, whereExt, datatypesMapping, readonly),
 		conn:            conn,
 		minSizeOfRecord: 10,
 	}
@@ -69,6 +71,12 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 	if err != nil {
 		return nil, err
 	}
+	if len(b.DatatypesMapping) > 0 {
+		record, err = record.DatetypeCasting(b.DatatypesMapping...)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if len(record) != b.minSizeOfRecord {
 		b.minSizeOfRecord = len(record)
 	}
@@ -80,6 +88,15 @@ func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record,
 	err := pgxscan.Select(ctx, b.conn, &res, b.ListQuery.String(), b.ListQuery.Args(ectx)...)
 	if err != nil {
 		return nil, err
+	}
+	if len(b.DatatypesMapping) > 0 {
+		for i, record := range res {
+			record, err = record.DatetypeCasting(b.DatatypesMapping...)
+			if err != nil {
+				return nil, err
+			}
+			res[i] = record
+		}
 	}
 	return res, err
 }
