@@ -216,11 +216,13 @@ publishing systems, such as queues. This approach can be used to publish events
 that occur within a system, or to create pending actions.
 
 ### Build
+
 ```ss
 APP_BUILD_TAGS=kafka,redispub,nats make build
 ```
 
 ### Config
+
 ```yaml
 sources:
   # (kafka|nats|redispub)://hostname:port/group_name?topics=name_in_stream
@@ -231,6 +233,7 @@ sources:
 ```
 
 ### Using
+
 ```sh
 hostname:8081> set news_notify '{"action":"view","id":100,"ts":199991229912}'
 OK

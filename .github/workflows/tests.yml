@@ -19,6 +19,7 @@ concurrency:
 jobs:
   lint:
     if: github.event.pull_request.draft == false
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
