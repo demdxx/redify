@@ -25,25 +25,25 @@ func TestPrepareConfig(t *testing.T) {
 
 	conf := ConfigType{
 		Cache: cacheConfig{
-			Connect: "${{CACHE_CONNECT}}",
+			Connect: "${{env.CACHE_CONNECT}}",
 		},
 		Sources: []dataSource{
 			{
-				Connect:       "${{SOURCE1_CONNECT}}",
-				NotifyChannel: "${{SOURCE1_NOTIFY_CHANNEL}}",
+				Connect:       "${{env.SOURCE1_CONNECT}}",
+				NotifyChannel: "${{env.SOURCE1_NOTIFY_CHANNEL}}",
 				Binds: []dataSourceKeyBind{
 					{
-						TableName:   "${{SOURCE1_BIND1_TABLE_NAME}}",
-						Key:         "${{SOURCE1_BIND1_KEY}}",
-						WhereExt:    "${{SOURCE1_BIND1_WHERE_EXT}}",
-						GetQuery:    "${{SOURCE1_BIND1_GET_QUERY}}",
-						ListQuery:   "${{SOURCE1_BIND1_LIST_QUERY}}",
-						UpsertQuery: "${{SOURCE1_BIND1_UPSERT_QUERY}}",
-						DelQuery:    "${{SOURCE1_BIND1_DEL_QUERY}}",
+						TableName:   "${{env.SOURCE1_BIND1_TABLE_NAME}}",
+						Key:         "${{env.SOURCE1_BIND1_KEY}}",
+						WhereExt:    "${{env.SOURCE1_BIND1_WHERE_EXT}}",
+						GetQuery:    "${{env.SOURCE1_BIND1_GET_QUERY}}",
+						ListQuery:   "${{env.SOURCE1_BIND1_LIST_QUERY}}",
+						UpsertQuery: "${{env.SOURCE1_BIND1_UPSERT_QUERY}}",
+						DelQuery:    "${{env.SOURCE1_BIND1_DEL_QUERY}}",
 						DatatypeMapping: []DatatypeMapper{
 							{
-								Name: "${{SOURCE1_BIND1_DATATYPE_MAPPING1_NAME}}",
-								Type: "${{SOURCE1_BIND1_DATATYPE_MAPPING1_TYPE}}",
+								Name: "${{env.SOURCE1_BIND1_DATATYPE_MAPPING1_NAME}}",
+								Type: "${{env.SOURCE1_BIND1_DATATYPE_MAPPING1_TYPE}}",
 							},
 						},
 					},
@@ -79,19 +79,19 @@ func TestPrepareItem(t *testing.T) {
 			out: "test",
 		},
 		{
-			in:  "${{test}}",
+			in:  "${{env.test}}",
 			out: "",
 		},
 		{
-			in:  "${{test}}test",
+			in:  "${{env.test}}test",
 			out: "test",
 		},
 		{
-			in:  "test_${{VAR1}}",
+			in:  "test_${{env.VAR1}}",
 			out: "test_var1",
 		},
 		{
-			in:  "test_${{VAR1 }}_${{ VAR2}}",
+			in:  "test_${{env.VAR1 }}_${{ env.VAR2}}",
 			out: "test_var1_var2",
 		},
 	}

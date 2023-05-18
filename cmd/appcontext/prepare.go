@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var regExpEnvVarsExpression = regexp.MustCompile(`\$\{\{(\s*[a-zA-Z0-9_]+\s*)\}\}`)
+var regExpEnvVarsExpression = regexp.MustCompile(`\$\{\{(\s*env.[a-zA-Z0-9_]+\s*)\}\}`)
 
 func (c *ConfigType) Prepare() {
 	c.Cache.Connect = prepareItem(c.Cache.Connect)
@@ -37,6 +37,7 @@ func prepareItem(s string) string {
 		envName := strings.TrimPrefix(s, "${{")
 		envName = strings.TrimSuffix(envName, "}}")
 		envName = strings.TrimSpace(envName)
+		envName = strings.TrimPrefix(envName, "env.")
 		v, _ := os.LookupEnv(envName)
 		return v
 	})
