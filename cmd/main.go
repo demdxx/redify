@@ -34,6 +34,7 @@ var (
 
 func init() {
 	fatalError(goconfig.Load(&config), "load config:")
+	config.Prepare()
 
 	if config.IsDebug() {
 		fmt.Println(&config)
