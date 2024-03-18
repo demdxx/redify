@@ -89,6 +89,9 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 }
 
 func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record, error) {
+	if b.ListQuery == nil {
+		return nil, nil
+	}
 	res := make([]Record, 0, 10)
 	rows, err := b.db.QueryxContext(ctx, b.ListQuery.String(), b.ListQuery.Args(ectx)...)
 	ctxlogger.Get(ctx).Debug("List",

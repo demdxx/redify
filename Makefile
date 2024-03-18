@@ -128,37 +128,46 @@ define do_build
 	@for os in $(OS_LIST); do \
 		for arch in $(ARCH_LIST); do \
 			if [ "$$os/$$arch" != "darwin/arm" ]; then \
-				if [ "$$arch" = "arm" ]; then \
-					for armv in $(BUILD_GOARM_LIST); do \
-						echo "Build $$os/$$arch/v$$armv"; \
-						GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} GOARM=$$armv \
-							go build \
-								-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
-								-tags "${APP_TAGS}" -o .build/$$os/$$arch/v$$armv/$(2) $(1); \
-					done; \
+				if [ "$$arch" = "arm64" ]; then \
+					echo "Build $$os/$$arch/v8"; \
+					GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} \
+						go build \
+							-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
+							-tags "${APP_TAGS}" -o .build/$$os/$$arch/v8/$(2) $(1); \
+						cp .build/$$os/$$arch/v8/$(2) .build/$$os/$$arch/$(2); \
 				else \
-					if [ "$$arch" = "amd64" ]; then \
-						for amd64v in $(BUILD_GOAMD64_LIST); do \
-							if [ "$$amd64v" == "1" ]; then \
-								echo "Build $$os/$$arch -> v1"; \
-								GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} GOAMD64=v$$amd64v \
-									go build \
-										-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
-										-tags "${APP_TAGS}" -o .build/$$os/$$arch/$(2) $(1); \
-							else \
-								echo "Build $$os/$$arch/v$$amd64v"; \
-								GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} GOAMD64=v$$amd64v \
-									go build \
-										-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
-										-tags "${APP_TAGS}" -o .build/$$os/$$arch/v$$amd64v/$(2) $(1); \
-							fi; \
+					if [ "$$arch" = "arm" ]; then \
+						for armv in $(BUILD_GOARM_LIST); do \
+							echo "Build $$os/$$arch/v$$armv"; \
+							GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} GOARM=$$armv \
+								go build \
+									-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
+									-tags "${APP_TAGS}" -o .build/$$os/$$arch/v$$armv/$(2) $(1); \
 						done; \
 					else \
-						echo "Build $$os/$$arch"; \
-						GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} \
-							go build \
-								-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
-								-tags "${APP_TAGS}" -o .build/$$os/$$arch/$(2) $(1); \
+						if [ "$$arch" = "amd64" ]; then \
+							for amd64v in $(BUILD_GOAMD64_LIST); do \
+								if [ "$$amd64v" == "1" ]; then \
+									echo "Build $$os/$$arch -> v1"; \
+									GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} GOAMD64=v$$amd64v \
+										go build \
+											-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
+											-tags "${APP_TAGS}" -o .build/$$os/$$arch/$(2) $(1); \
+								else \
+									echo "Build $$os/$$arch/v$$amd64v"; \
+									GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} GOAMD64=v$$amd64v \
+										go build \
+											-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
+											-tags "${APP_TAGS}" -o .build/$$os/$$arch/v$$amd64v/$(2) $(1); \
+								fi; \
+							done; \
+						else \
+							echo "Build $$os/$$arch"; \
+							GOOS=$$os GOARCH=$$arch CGO_ENABLED=${BUILD_CGO_ENABLED} \
+								go build \
+									-ldflags "-s -w -X main.appVersion=`date -u +%Y%m%d` -X main.buildCommit=${COMMIT_NUMBER} -X main.buildVersion=${TAG_VALUE} -X main.buildDate=`date -u +%Y%m%d.%H%M%S`"  \
+									-tags "${APP_TAGS}" -o .build/$$os/$$arch/$(2) $(1); \
+						fi; \
 					fi; \
 				fi; \
 			fi; \

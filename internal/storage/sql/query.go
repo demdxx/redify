@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	reTableSelect = regexp.MustCompile(`select\s+.*\s+from\s+([^\s]+)`)
-	reTableInsert = regexp.MustCompile(`insert\s+into\s+([^\s]+)`)
-	reTableDelete = regexp.MustCompile(`delete\s+from\s+([^\s]+)`)
+	reTableSelect = regexp.MustCompile(`(?mi)select\s+.*\s+from\s+([^\s]+)`)
+	reTableInsert = regexp.MustCompile(`(?mi)insert\s+into\s+([^\s]+)`)
+	reTableDelete = regexp.MustCompile(`(?mi)delete\s+from\s+([^\s]+)`)
 )
 
 type Query struct {
@@ -37,11 +37,11 @@ func ParseQuery(q string) *Query {
 	q2 := strings.TrimSpace(strings.ToLower(q))
 	switch {
 	case strings.HasPrefix(q2, "select"):
-		r = reTableSelect.FindStringSubmatch(q2)
+		r = reTableSelect.FindStringSubmatch(q)
 	case strings.HasPrefix(q2, "insert"):
-		r = reTableInsert.FindStringSubmatch(q2)
+		r = reTableInsert.FindStringSubmatch(q)
 	case strings.HasPrefix(q2, "delete"):
-		r = reTableDelete.FindStringSubmatch(q2)
+		r = reTableDelete.FindStringSubmatch(q)
 	}
 	if len(r) > 0 {
 		tableName = r[1]

@@ -18,9 +18,9 @@ func TestQuery(t *testing.T) {
 		expectVars      []any
 	}{
 		{
-			q:               "SELECT * FROM data WHERE slug={{slug}}, type={{type}}",
+			q:               "SELECT * \nFROM data WHERE slug={{slug}}, type={{type}}",
 			ctx:             keypattern.ExecContext{"slug": "slug1", "type": "type1"},
-			expectQ:         "SELECT * FROM data WHERE slug=$1, type=$2",
+			expectQ:         "SELECT * \nFROM data WHERE slug=$1, type=$2",
 			expectTableName: "data",
 			extpectArgs:     []string{"slug", "type"},
 			expectVars:      []any{"slug1", "type1"},
