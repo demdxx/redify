@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"io"
+
+	"github.com/demdxx/redify/internal/cache"
 )
 
 var (
-	ErrNotFound             = errors.New("not found")
-	ErrNoKey                = errors.New("no key")
+	ErrNotFound             = cache.ErrNotFound
+	ErrNoKey                = cache.ErrNoKey
 	ErrReadOnly             = errors.New("readonly access")
 	ErrInvalidBindConfig    = errors.New("invalid bind config")
 	ErrMethodIsNotSupported = errors.New("method is not supported")
@@ -39,13 +41,7 @@ type Driver interface {
 }
 
 // Cacher manage interface
-type Cacher interface {
-	io.Closer
-	WithPrefix(prefix string) Cacher
-	Get(ctx context.Context, key string) ([]byte, error)
-	Set(ctx context.Context, key string, value []byte) error
-	Del(ctx context.Context, key string) error
-}
+type Cacher = cache.Cacher
 
 // CacheSupporter extension
 type CacheSupporter interface {

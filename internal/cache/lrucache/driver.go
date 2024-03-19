@@ -5,8 +5,8 @@ import (
 
 	lru "github.com/hashicorp/golang-lru/v2"
 
+	"github.com/demdxx/redify/internal/cache"
 	"github.com/demdxx/redify/internal/fasttime"
-	"github.com/demdxx/redify/internal/storage"
 )
 
 type item struct {
@@ -35,7 +35,7 @@ func New(size, ttl int) (*lruCache, error) {
 	}, nil
 }
 
-func (d *lruCache) WithPrefix(prefix string) storage.Cacher {
+func (d *lruCache) WithPrefix(prefix string) cache.Cacher {
 	return &lruCache{
 		ttl:    d.ttl,
 		prefix: prefix,
@@ -47,11 +47,11 @@ func (d *lruCache) Get(ctx context.Context, key string) ([]byte, error) {
 	key = d.prefix + key
 	val, ok := d.cache.Get(key)
 	if !ok {
-		return nil, storage.ErrNotFound
+		return nil, cache.ErrNotFound
 	}
 	if val.createdTime+d.ttl < fasttime.UnixTimestamp() {
 		_ = d.cache.Remove(key)
-		return nil, storage.ErrNotFound
+		return nil, cache.ErrNotFound
 	}
 	return val.value, nil
 }
@@ -63,7 +63,7 @@ func (d *lruCache) Set(ctx context.Context, key string, value []byte) error {
 
 func (d *lruCache) Del(ctx context.Context, key string) error {
 	if !d.cache.Remove(d.prefix + key) {
-		return storage.ErrNotFound
+		return cache.ErrNotFound
 	}
 	return nil
 }

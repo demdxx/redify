@@ -7,7 +7,7 @@ import (
 
 	"github.com/jellydator/ttlcache/v3"
 
-	"github.com/demdxx/redify/internal/storage"
+	"github.com/demdxx/redify/internal/cache"
 )
 
 var errSaveItem = errors.New(`undefined error of item savings`)
@@ -20,7 +20,7 @@ type simpleCache struct {
 }
 
 // NewCache simple driver cache implementation
-func NewCache(size, ttl int, prefix string) (storage.Cacher, error) {
+func NewCache(size, ttl int, prefix string) (cache.Cacher, error) {
 	if ttl <= 0 {
 		ttl = 60
 	}
@@ -39,11 +39,11 @@ func NewCache(size, ttl int, prefix string) (storage.Cacher, error) {
 }
 
 // New simple driver cache implementation
-func New(size, ttl int) (storage.Cacher, error) {
+func New(size, ttl int) (cache.Cacher, error) {
 	return NewCache(size, ttl, "")
 }
 
-func (d *simpleCache) WithPrefix(prefix string) storage.Cacher {
+func (d *simpleCache) WithPrefix(prefix string) cache.Cacher {
 	cache, err := NewCache(d.size, d.ttl, prefix)
 	if err != nil {
 		panic(err)
@@ -54,7 +54,7 @@ func (d *simpleCache) WithPrefix(prefix string) storage.Cacher {
 func (d *simpleCache) Get(ctx context.Context, key string) ([]byte, error) {
 	val := d.cache.Get(d.prefix + key)
 	if val == nil {
-		return nil, storage.ErrNotFound
+		return nil, cache.ErrNotFound
 	}
 	return val.Value(), nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis/v8"
 
 	"github.com/demdxx/gocast/v2"
-	"github.com/demdxx/redify/internal/storage"
+	"github.com/demdxx/redify/internal/cache"
 )
 
 type simpleCache struct {
@@ -19,7 +19,7 @@ type simpleCache struct {
 }
 
 // New redis driver cache implementation
-func New(connect string, ttl time.Duration) (storage.Cacher, error) {
+func New(connect string, ttl time.Duration) (cache.Cacher, error) {
 	urlObj, err := url.Parse(connect)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func New(connect string, ttl time.Duration) (storage.Cacher, error) {
 	), nil
 }
 
-func newFromConnect(conn *retainConnect, ttl time.Duration, prefix string) storage.Cacher {
+func newFromConnect(conn *retainConnect, ttl time.Duration, prefix string) cache.Cacher {
 	return &simpleCache{
 		conn:   conn,
 		ttl:    ttl,
@@ -61,7 +61,7 @@ func newFromConnect(conn *retainConnect, ttl time.Duration, prefix string) stora
 	}
 }
 
-func (d *simpleCache) WithPrefix(prefix string) storage.Cacher {
+func (d *simpleCache) WithPrefix(prefix string) cache.Cacher {
 	return newFromConnect(d.conn.inc(), d.ttl, prefix)
 }
 
@@ -69,7 +69,7 @@ func (d *simpleCache) Get(ctx context.Context, key string) ([]byte, error) {
 	val, err := d.conn.GetEx(ctx, d.prefix+key, d.ttl).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return nil, storage.ErrNotFound
+			return nil, cache.ErrNotFound
 		}
 		return nil, _err(err)
 	}
@@ -90,7 +90,7 @@ func (d *simpleCache) Close() error {
 
 func _err(err error) error {
 	if err == redis.Nil {
-		return storage.ErrNotFound
+		return cache.ErrNotFound
 	}
 	return err
 }

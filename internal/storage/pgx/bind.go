@@ -6,6 +6,7 @@ import (
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgconn"
+	"github.com/jackc/pgtype"
 
 	"github.com/demdxx/redify/internal/keypattern"
 	"github.com/demdxx/redify/internal/storage"
@@ -71,6 +72,10 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 	if err != nil {
 		return nil, err
 	}
+	record, err = prepareRecordValues(record)
+	if err != nil {
+		return nil, err
+	}
 	if len(b.DatatypesMapping) > 0 {
 		record, err = record.DatetypeCasting(b.DatatypesMapping...)
 		if err != nil {
@@ -125,4 +130,46 @@ func (b *Bind) Del(ctx context.Context, ectx keypattern.ExecContext) error {
 	}
 	_, err := b.conn.Exec(ctx, b.DelQuery.String(), b.DelQuery.Args(ectx)...)
 	return err
+}
+
+func prepareRecordValues(recordScan Record) (Record, error) {
+	record := make(Record, len(recordScan))
+	for key, val := range recordScan {
+		var err error
+		switch t := val.(type) {
+		case pgtype.TextArray:
+			err = assignRecord[string](record, key, &t)
+		case pgtype.Int4Array:
+			err = assignRecord[int](record, key, &t)
+		case pgtype.Int8Array:
+			err = assignRecord[int64](record, key, &t)
+		case pgtype.Float4Array:
+			err = assignRecord[float32](record, key, &t)
+		case pgtype.Float8Array:
+			err = assignRecord[float64](record, key, &t)
+		case pgtype.BoolArray:
+			err = assignRecord[bool](record, key, &t)
+		case pgtype.JSON:
+			record[key] = json.RawMessage(t.Bytes)
+		default:
+			record[key] = val
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return record, nil
+}
+
+type assigner interface {
+	AssignTo(any) error
+}
+
+func assignRecord[T any, R assigner](record Record, key string, v R) error {
+	var arr []T
+	if err := v.AssignTo(&arr); err != nil {
+		return err
+	}
+	record[key] = arr
+	return nil
 }

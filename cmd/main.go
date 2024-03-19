@@ -4,23 +4,22 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
-	"sync"
-	"time"
+	"os"
+	"os/signal"
 
 	"github.com/demdxx/goconfig"
 	"go.uber.org/zap"
 
 	"github.com/demdxx/redify/cmd/appcontext"
 	"github.com/demdxx/redify/cmd/server"
+	"github.com/demdxx/redify/internal/cache"
+	cachecon "github.com/demdxx/redify/internal/cache/connect"
 	"github.com/demdxx/redify/internal/context/ctxlogger"
 	"github.com/demdxx/redify/internal/storage"
 	"github.com/demdxx/redify/internal/storage/connect"
 	"github.com/demdxx/redify/internal/storage/multistore"
 	"github.com/demdxx/redify/internal/storage/profiler"
 	"github.com/demdxx/redify/internal/storage/proxy"
-	"github.com/demdxx/redify/internal/storage/rediscache"
-	"github.com/demdxx/redify/internal/storage/simplecache"
 	"github.com/demdxx/redify/internal/zlogger"
 )
 
@@ -56,19 +55,19 @@ func init() {
 }
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	ctx = ctxlogger.WithLogger(ctx, zap.L())
 	defer cancel()
 
 	var (
-		globalCache storage.Cacher
+		globalCache cache.Cacher
 		stores      []storage.Driver
-		err         error
 	)
 
 	// Connect global cache
 	if config.Cache.Connect != "" {
-		globalCache, err = connectCache(config.Cache.Connect, config.Cache.Size, config.Cache.TTL)
+		var err error
+		globalCache, err = cachecon.Connect(config.Cache.Connect, config.Cache.Size, config.Cache.TTL)
 		fatalError(err, "create simple cache")
 	}
 
@@ -93,17 +92,13 @@ func main() {
 				UpsertQuery:      bind.UpsertQuery,
 				DelQuery:         bind.DelQuery,
 				ReorganizeNested: bind.ReorganizeNested,
-				DatatypeMapping:  datatipeMappingCast(bind.DatatypeMapping),
+				DatatypeMapping:  datatypeMappingCast(bind.DatatypeMapping),
 			})
 			fatalError(err, sconf.Connect+" @ bind error")
 		}
 	}
 
-	var (
-		wg    sync.WaitGroup
-		store = multistore.New(stores...)
-	)
-
+	store := multistore.New(stores...)
 	defer func() {
 		fatalError(store.Close(), "close DB connection")
 	}()
@@ -118,7 +113,6 @@ func main() {
 
 	if config.Server.RedisServer.Listen != "" {
 		zap.L().Info("Run Redis server", zap.String("listen", config.Server.RedisServer.Listen))
-		wg.Add(1)
 		go func() {
 			srv := server.RedisServer{
 				RequestTimeout: config.Server.RedisServer.ReadTimeout,
@@ -126,13 +120,11 @@ func main() {
 			}
 			err := srv.ListenAndServe(ctx, config.Server.RedisServer.Listen)
 			fatalError(err, "Listen Redis server")
-			wg.Done()
 		}()
 	}
 
 	if config.Server.HTTPServer.Listen != "" {
 		zap.L().Info("Run HTTP server", zap.String("listen", config.Server.HTTPServer.Listen))
-		wg.Add(1)
 		go func() {
 			srv := server.HTTPServer{
 				RequestTimeout: config.Server.HTTPServer.ReadTimeout,
@@ -140,31 +132,13 @@ func main() {
 			}
 			err := srv.ListenAndServe(ctx, config.Server.HTTPServer.Listen)
 			fatalError(err, "Listen HTTP server")
-			wg.Done()
 		}()
 	}
 
-	wg.Wait()
+	<-ctx.Done()
 }
 
-func connectCache(connect string, size int, ttl time.Duration) (storage.Cacher, error) {
-	switch {
-	case strings.HasPrefix(connect, "redis://"):
-		return rediscache.New(connect, ttl)
-	case connect == "memory":
-		return simplecache.New(size, int(ttl.Seconds()))
-	default:
-		return nil, fmt.Errorf("invalid cache connect: %s", connect)
-	}
-}
-
-func fatalError(err error, msgs ...any) {
-	if err != nil {
-		log.Fatalln(append(msgs, err)...)
-	}
-}
-
-func datatipeMappingCast(mappers []appcontext.DatatypeMapper) []storage.DatatypeMapper {
+func datatypeMappingCast(mappers []appcontext.DatatypeMapper) []storage.DatatypeMapper {
 	result := make([]storage.DatatypeMapper, len(mappers))
 	for i, m := range mappers {
 		result[i] = storage.DatatypeMapper{
@@ -173,4 +147,10 @@ func datatipeMappingCast(mappers []appcontext.DatatypeMapper) []storage.Datatype
 		}
 	}
 	return result
+}
+
+func fatalError(err error, msgs ...any) {
+	if err != nil {
+		log.Fatalln(append(msgs, err)...)
+	}
 }

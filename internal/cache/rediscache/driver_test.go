@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/demdxx/redify/internal/cache"
 	"github.com/demdxx/redify/internal/storage"
 	"github.com/elliotchance/redismock/v8"
 	"github.com/go-redis/redis/v8"
@@ -29,7 +30,7 @@ func TestDriver(t *testing.T) {
 		mockCli   = newTestRedis(mr)
 		ctx       = context.Background()
 		cacheMain = newFromConnect(&retainConnect{Cmdable: mockCli}, 0, "")
-		caches    = []storage.Cacher{cacheMain}
+		caches    = []cache.Cacher{cacheMain}
 	)
 	if !assert.NoError(t, err, "new cache object") {
 		return
