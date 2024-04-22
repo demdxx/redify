@@ -90,7 +90,7 @@ func TestDatetypeCasting(t *testing.T) {
 		},
 		"json.field": json.RawMessage(`null`),
 	}
-	res, err := testRecord.DatetypeCasting(
+	res, err := testRecord.DatatypeCasting(
 		DatatypeMapper{Name: "staff.age", Type: "int"},
 		DatatypeMapper{Name: "raw.json", Type: "json"},
 		DatatypeMapper{Name: "json.field", Type: "json"})

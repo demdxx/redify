@@ -13,6 +13,7 @@ import (
 
 type Bind struct {
 	BindAbstract
+	driverName       string
 	db               *sqlx.DB
 	reorganizeNested bool
 	minSizeOfRecord  int
@@ -57,6 +58,7 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 	record := make(Record, b.minSizeOfRecord)
 	rows, err := b.db.QueryxContext(ctx, b.GetQuery.String(), b.GetQuery.Args(ectx)...)
 	ctxlogger.Get(ctx).Debug("Get",
+		zap.String("driver", b.driverName),
 		zap.Int("dbnum", b.DBNum),
 		zap.String("query", b.GetQuery.String()),
 		zap.Any("args", b.GetQuery.Args(ectx)),
@@ -80,7 +82,7 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 	}
 
 	if len(b.DatatypesMapping) > 0 {
-		record, err = record.DatetypeCasting(b.DatatypesMapping...)
+		record, err = record.DatatypeCasting(b.DatatypesMapping...)
 		if err != nil {
 			return nil, err
 		}
@@ -95,6 +97,7 @@ func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record,
 	res := make([]Record, 0, 10)
 	rows, err := b.db.QueryxContext(ctx, b.ListQuery.String(), b.ListQuery.Args(ectx)...)
 	ctxlogger.Get(ctx).Debug("List",
+		zap.String("driver", b.driverName),
 		zap.Int("dbnum", b.DBNum),
 		zap.String("query", b.GetQuery.String()),
 		zap.Any("args", b.GetQuery.Args(ectx)),
@@ -119,7 +122,7 @@ func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record,
 			record = newRecord
 		}
 		if len(b.DatatypesMapping) > 0 {
-			record, err = record.DatetypeCasting(b.DatatypesMapping...)
+			record, err = record.DatatypeCasting(b.DatatypesMapping...)
 			if err != nil {
 				return nil, err
 			}
@@ -145,6 +148,7 @@ func (b *Bind) Upsert(ctx context.Context, ectx keypattern.ExecContext, value []
 	}
 	_, err := b.db.ExecContext(ctx, b.UpsertQuery.String(), b.UpsertQuery.Args(ectx)...)
 	ctxlogger.Get(ctx).Debug("Upsert",
+		zap.String("driver", b.driverName),
 		zap.Int("dbnum", b.DBNum),
 		zap.String("query", b.GetQuery.String()),
 		zap.Any("args", b.GetQuery.Args(ectx)),
@@ -159,6 +163,7 @@ func (b *Bind) Del(ctx context.Context, ectx keypattern.ExecContext) error {
 	}
 	_, err := b.db.ExecContext(ctx, b.DelQuery.String(), b.DelQuery.Args(ectx)...)
 	ctxlogger.Get(ctx).Debug("Del",
+		zap.String("driver", b.driverName),
 		zap.Int("dbnum", b.DBNum),
 		zap.String("query", b.GetQuery.String()),
 		zap.Any("args", b.GetQuery.Args(ectx)),

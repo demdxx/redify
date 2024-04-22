@@ -77,7 +77,7 @@ func (b *Bind) Get(ctx context.Context, ectx keypattern.ExecContext) (Record, er
 		return nil, err
 	}
 	if len(b.DatatypesMapping) > 0 {
-		record, err = record.DatetypeCasting(b.DatatypesMapping...)
+		record, err = record.DatatypeCasting(b.DatatypesMapping...)
 		if err != nil {
 			return nil, err
 		}
@@ -96,7 +96,7 @@ func (b *Bind) List(ctx context.Context, ectx keypattern.ExecContext) ([]Record,
 	}
 	if len(b.DatatypesMapping) > 0 {
 		for i, record := range res {
-			record, err = record.DatetypeCasting(b.DatatypesMapping...)
+			record, err = record.DatatypeCasting(b.DatatypesMapping...)
 			if err != nil {
 				return nil, err
 			}

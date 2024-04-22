@@ -89,8 +89,8 @@ func (r Record) ReorganizeNested() (Record, error) {
 	return res, nil
 }
 
-// DatetypeCasting convert values to the specified types
-func (r Record) DatetypeCasting(mappers ...DatatypeMapper) (_ Record, err error) {
+// DatatypeCasting convert values to the specified types
+func (r Record) DatatypeCasting(mappers ...DatatypeMapper) (_ Record, err error) {
 	for _, mapper := range mappers {
 		_, ok := r[mapper.Name]
 		mType := strings.ToLower(mapper.Type)

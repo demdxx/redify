@@ -11,9 +11,10 @@ import (
 )
 
 type sqlStore struct {
-	db     *sqlx.DB
-	binds  []*Bind
-	syntax Syntax
+	driverName string
+	db         *sqlx.DB
+	binds      []*Bind
+	syntax     Syntax
 }
 
 // Open sql driver connect
@@ -38,7 +39,7 @@ func Open(ctx context.Context, driver, connURL string) (storage.Driver, error) {
 	default:
 		syntax = NewAbstractSyntax(`"`)
 	}
-	return &sqlStore{db: db, syntax: syntax}, nil
+	return &sqlStore{db: db, driverName: driver, syntax: syntax}, nil
 }
 
 func (dr *sqlStore) Get(ctx context.Context, dbnum int, key string) ([]byte, error) {
@@ -111,6 +112,7 @@ func (dr *sqlStore) Bind(ctx context.Context, conf *storage.BindConfig) error {
 	} else {
 		return storage.ErrInvalidBindConfig
 	}
+	bind.driverName = dr.driverName
 	dr.binds = append(dr.binds, bind)
 	return nil
 }
