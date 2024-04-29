@@ -136,11 +136,31 @@ func (r Record) fieldCasting(record Record, field, completeField []string, dtype
 					record[field[0]] = json.RawMessage(data)
 				}
 			}
-		case "string":
+		case "json-or-string":
+			switch val.(type) {
+			case json.RawMessage:
+			case string, []byte:
+				data := gocast.Str(val)
+				if data != "" {
+					// Validate JSON
+					if err = json.Unmarshal([]byte(data), &[]any{nil}[0]); err == nil {
+						record[field[0]] = json.RawMessage(data)
+					} else {
+						record[field[0]] = data
+						err = nil
+					}
+				}
+			default:
+				var data []byte
+				if data, err = json.Marshal(val); err == nil {
+					record[field[0]] = json.RawMessage(data)
+				}
+			}
+		case "string", "text", "str":
 			record[field[0]], err = gocast.TryStr(val)
-		case "int":
+		case "int", "integer", "int64":
 			record[field[0]], err = gocast.TryNumber[int64](val)
-		case "float":
+		case "float", "float64", "double":
 			record[field[0]], err = gocast.TryNumber[float64](val)
 		case "bool":
 			// TODO: add boolean type check
