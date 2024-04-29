@@ -16,6 +16,7 @@ env:
   BUILD_GOAMD64_LIST: 1 2 3 4
   DEPLOY_ARCH_LIST: amd64 arm64 arm
   DEPLOY_COMMIT_NUMBER: ${{ github.sha }}
+  DOCKER_DEFAULT_BUILD_GOARM_LIST: 6 7
   DEPLOY_TAG_VALUE: ${{ github.event.workflow_run.head_branch }}
   APP_BUILD_TAGS: pgx,mysql,allstreams,clickhouse
 
