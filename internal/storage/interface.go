@@ -37,6 +37,7 @@ type Driver interface {
 	Set(ctx context.Context, dbnum int, key string, value []byte) error
 	Del(ctx context.Context, dbnum int, key string) error
 	Keys(ctx context.Context, dbnum int, pattern string) ([]string, error)
+	List(ctx context.Context, dbnum int, pattern string) ([]byte, error)
 	Bind(ctx context.Context, conf *BindConfig) error
 }
 

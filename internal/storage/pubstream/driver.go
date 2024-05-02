@@ -62,6 +62,10 @@ func (dr *driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string
 	return keys, nil
 }
 
+func (dr *driver) List(ctx context.Context, dbnum int, pattern string) ([]byte, error) {
+	return nil, nil // storage.ErrMethodIsNotSupported
+}
+
 func (dr *driver) Bind(ctx context.Context, conf *storage.BindConfig) error {
 	dr.binds = append(dr.binds, &bind{
 		dbnum: conf.DBNum,

@@ -82,6 +82,10 @@ func (d *proxyStore) Keys(ctx context.Context, dbnum int, pattern string) ([]str
 	return d.store.Keys(ctx, dbnum, pattern)
 }
 
+func (d *proxyStore) List(ctx context.Context, dbnum int, pattern string) ([]byte, error) {
+	return d.store.List(ctx, dbnum, pattern)
+}
+
 func (d *proxyStore) Bind(ctx context.Context, conf *storage.BindConfig) error {
 	return d.store.Bind(ctx, conf)
 }

@@ -86,11 +86,11 @@ func (p *Pattern) String() string {
 	for _, mt := range p.matchers {
 		switch m := mt.(type) {
 		case *varMatcher:
-			buf.WriteString(m.name)
+			_, _ = buf.WriteString(m.name)
 		case *constMatcher:
-			buf.WriteString(m.val)
+			_, _ = buf.WriteString(m.val)
 		default:
-			buf.WriteString(fmt.Sprintf("%s", mt))
+			_, _ = buf.WriteString(fmt.Sprintf("%s", mt))
 		}
 	}
 	return buf.String()
@@ -101,11 +101,11 @@ func (p *Pattern) Format(vals ValueGetter) string {
 	for _, mt := range p.matchers {
 		switch m := mt.(type) {
 		case *varMatcher:
-			buf.WriteString(gocast.Str(vals.Get(m.name)))
+			_, _ = buf.WriteString(gocast.Str(vals.Get(m.name)))
 		case *constMatcher:
-			buf.WriteString(m.val)
+			_, _ = buf.WriteString(m.val)
 		default:
-			buf.WriteString(fmt.Sprintf("%s", mt))
+			_, _ = buf.WriteString(fmt.Sprintf("%s", mt))
 		}
 	}
 	return buf.String()

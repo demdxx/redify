@@ -1,6 +1,7 @@
 package pgx
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"strings"
@@ -99,6 +100,34 @@ func (pg *Driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string
 		return nil, storage.ErrNoKey
 	}
 	return keys, nil
+}
+
+func (pg *Driver) List(ctx context.Context, dbnum int, pattern string) ([]byte, error) {
+	var (
+		buf bytes.Buffer
+		enc = json.NewEncoder(&buf)
+	)
+	_, _ = buf.Write([]byte{'['})
+	for _, bind := range pg.binds {
+		ectx := keypattern.ExecContext{}
+		if bind.DBNum != dbnum || !bind.MatchPattern(pattern, ectx) {
+			continue
+		}
+		res, err := bind.List(ctx, ectx)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range res {
+			if buf.Len() > 1 {
+				_, _ = buf.Write([]byte{','})
+			}
+			if err := enc.Encode(r); err != nil {
+				return nil, err
+			}
+		}
+	}
+	_, _ = buf.Write([]byte{']'})
+	return buf.Bytes(), nil
 }
 
 func (pg *Driver) Bind(ctx context.Context, conf *storage.BindConfig) error {

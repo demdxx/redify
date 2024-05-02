@@ -1,10 +1,12 @@
 package multistore
 
 import (
+	"bytes"
 	"context"
 
-	"github.com/demdxx/redify/internal/storage"
 	"go.uber.org/multierr"
+
+	"github.com/demdxx/redify/internal/storage"
 )
 
 type Driver struct {
@@ -67,6 +69,28 @@ func (d *Driver) Keys(ctx context.Context, dbnum int, pattern string) (keys []st
 		keys = append(keys, skeys...)
 	}
 	return keys, err
+}
+
+func (d *Driver) List(ctx context.Context, dbnum int, pattern string) ([]byte, error) {
+	buf := bytes.Buffer{}
+	_ = buf.WriteByte('[')
+	for _, st := range d.stores {
+		sbuf, serr := st.List(ctx, dbnum, pattern)
+		if serr == storage.ErrNoKey {
+			continue
+		}
+		if serr != nil {
+			return nil, serr
+		}
+		if len(sbuf) > 2 {
+			if buf.Len() > 1 {
+				_ = buf.WriteByte(',')
+			}
+			_, _ = buf.Write(sbuf[1 : len(sbuf)-1])
+		}
+	}
+	_ = buf.WriteByte(']')
+	return buf.Bytes(), nil
 }
 
 func (d *Driver) Bind(ctx context.Context, conf *storage.BindConfig) error {

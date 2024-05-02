@@ -30,7 +30,7 @@ func (srv *HTTPServer) ListenAndServe(ctx context.Context, addr string) error {
 	srvApp.Get("/:dbnum/:key", srv.get)
 	srvApp.Put("/:dbnum/:key", srv.set)
 	srvApp.Post("/:dbnum/:key", srv.set)
-	srvApp.Get("/:dbnum/list/:pattern", srv.keys) // Deprecated
+	srvApp.Get("/:dbnum/list/:pattern", srv.list) // Deprecated
 	srvApp.Get("/:dbnum/keys/:pattern", srv.keys)
 	srvApp.Delete("/:dbnum/:key", srv.del)
 
@@ -67,6 +67,22 @@ func (srv *HTTPServer) keys(c *fiber.Ctx) error {
 		return sendNotFound(c)
 	}
 	return sendJSONObject(c, keys)
+}
+
+func (srv *HTTPServer) list(c *fiber.Ctx) error {
+	var (
+		ctx       = c.UserContext()
+		pattern   = c.Params("pattern")
+		dbnum, _  = c.ParamsInt("dbnum")
+		data, err = srv.Driver.List(ctx, dbnum, pattern)
+	)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) && !errors.Is(err, storage.ErrNoKey) {
+		return sendError(c, err)
+	}
+	if errors.Is(err, storage.ErrNotFound) || errors.Is(err, storage.ErrNoKey) {
+		return sendNotFound(c)
+	}
+	return sendJSON(c, data)
 }
 
 func (srv *HTTPServer) set(c *fiber.Ctx) error {
