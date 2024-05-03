@@ -60,7 +60,7 @@ func (srv *HTTPServer) get(c *fiber.Ctx) error {
 func (srv *HTTPServer) keys(c *fiber.Ctx) error {
 	var (
 		ctx       = c.UserContext()
-		pattern   = c.Params("pattern")
+		pattern   = strings.ReplaceAll(c.Params("pattern"), "%2A", "*")
 		dbnum, _  = c.ParamsInt("dbnum")
 		keys, err = srv.Driver.Keys(ctx, dbnum, pattern)
 	)
@@ -76,7 +76,7 @@ func (srv *HTTPServer) keys(c *fiber.Ctx) error {
 func (srv *HTTPServer) list(c *fiber.Ctx) error {
 	var (
 		ctx       = c.UserContext()
-		pattern   = c.Params("pattern")
+		pattern   = strings.ReplaceAll(c.Params("pattern"), "%2A", "*")
 		dbnum, _  = c.ParamsInt("dbnum")
 		format    = strings.ToLower(c.Query("format", "json"))
 		data, err = srv.Driver.List(ctx, dbnum, pattern)
