@@ -1,7 +1,6 @@
 package sql
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 
@@ -102,12 +101,8 @@ func (dr *sqlStore) Keys(ctx context.Context, dbnum int, pattern string) ([]stri
 	return keys, nil
 }
 
-func (dr *sqlStore) List(ctx context.Context, dbnum int, pattern string) ([]byte, error) {
-	var (
-		buf bytes.Buffer
-		enc = json.NewEncoder(&buf)
-	)
-	_, _ = buf.Write([]byte{'['})
+func (dr *sqlStore) List(ctx context.Context, dbnum int, pattern string) ([]storage.Record, error) {
+	var response []storage.Record
 	for _, bind := range dr.binds {
 		ectx := keypattern.ExecContext{}
 		if bind.DBNum != dbnum || !bind.MatchPattern(pattern, ectx) {
@@ -117,17 +112,9 @@ func (dr *sqlStore) List(ctx context.Context, dbnum int, pattern string) ([]byte
 		if err != nil {
 			return nil, err
 		}
-		for _, r := range res {
-			if buf.Len() > 1 {
-				_, _ = buf.Write([]byte{','})
-			}
-			if err := enc.Encode(r); err != nil {
-				return nil, err
-			}
-		}
+		response = append(response, res...)
 	}
-	_, _ = buf.Write([]byte{']'})
-	return buf.Bytes(), nil
+	return response, nil
 }
 
 func (dr *sqlStore) Bind(ctx context.Context, conf *storage.BindConfig) error {

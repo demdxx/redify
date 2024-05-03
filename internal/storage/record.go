@@ -30,6 +30,11 @@ func (r Record) Get(key string) any {
 	return r[key]
 }
 
+// GetString value by key
+func (r Record) GetString(key string) string {
+	return gocast.Str(r.Get(key))
+}
+
 // ReorganizeNested record according to the key pattern
 // If some fields represented as a key with separator `.` in the key name
 // it need to combine with the other fields with the same prefix

@@ -1,7 +1,6 @@
 package multistore
 
 import (
-	"bytes"
 	"context"
 
 	"go.uber.org/multierr"
@@ -71,9 +70,8 @@ func (d *Driver) Keys(ctx context.Context, dbnum int, pattern string) (keys []st
 	return keys, err
 }
 
-func (d *Driver) List(ctx context.Context, dbnum int, pattern string) ([]byte, error) {
-	buf := bytes.Buffer{}
-	_ = buf.WriteByte('[')
+func (d *Driver) List(ctx context.Context, dbnum int, pattern string) ([]storage.Record, error) {
+	var response []storage.Record
 	for _, st := range d.stores {
 		sbuf, serr := st.List(ctx, dbnum, pattern)
 		if serr == storage.ErrNoKey {
@@ -82,15 +80,9 @@ func (d *Driver) List(ctx context.Context, dbnum int, pattern string) ([]byte, e
 		if serr != nil {
 			return nil, serr
 		}
-		if len(sbuf) > 2 {
-			if buf.Len() > 1 {
-				_ = buf.WriteByte(',')
-			}
-			_, _ = buf.Write(sbuf[1 : len(sbuf)-1])
-		}
+		response = append(response, sbuf...)
 	}
-	_ = buf.WriteByte(']')
-	return buf.Bytes(), nil
+	return response, nil
 }
 
 func (d *Driver) Bind(ctx context.Context, conf *storage.BindConfig) error {

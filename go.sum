@@ -724,6 +724,8 @@ github.com/demdxx/goconfig v1.0.0 h1:fmnaQfVGTIFVUzZfMbMC6nF0aQ0Mqd4KoWQwMarxdzU
 github.com/demdxx/goconfig v1.0.0/go.mod h1:Q0LfEpgzX7j1XnQMGFsmBMlFH6maWNs0M+eyE4evKMk=
 github.com/demdxx/pgxpoolmock v1.1.1-0.20211027111540-26ddce2c5601 h1:mcMzd936ALiQtUjrtT+2qrUTwv9Zi1XhuxbQYHRiWRk=
 github.com/demdxx/pgxpoolmock v1.1.1-0.20211027111540-26ddce2c5601/go.mod h1:Uq6x6grXIh5FsovGWHolC33tGBOPV3fUg6lUKEXZ0dQ=
+github.com/demdxx/xtypes v0.2.0 h1:F0jMk5ZlFfNatCJZp9gPlQhDAS6Q+1B/QNRtEHL1BzA=
+github.com/demdxx/xtypes v0.2.0/go.mod h1:z7AwIX7FpM9vW9oSzEbEjTxf9+52XqVUMYFaXEhe8O0=
 github.com/denisenkom/go-mssqldb v0.12.3 h1:pBSGx9Tq67pBOTLmxNuirNTeB8Vjmf886Kx+8Y+8shw=
 github.com/denisenkom/go-mssqldb v0.12.3/go.mod h1:k0mtMFOnU+AihqFxPMiF05rtiDrorD1Vrm1KEz5hxDo=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=

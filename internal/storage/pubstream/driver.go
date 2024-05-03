@@ -62,7 +62,7 @@ func (dr *driver) Keys(ctx context.Context, dbnum int, pattern string) ([]string
 	return keys, nil
 }
 
-func (dr *driver) List(ctx context.Context, dbnum int, pattern string) ([]byte, error) {
+func (dr *driver) List(ctx context.Context, dbnum int, pattern string) ([]storage.Record, error) {
 	return nil, nil // storage.ErrMethodIsNotSupported
 }
 
